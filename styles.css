@@ -1,5 +1,63 @@
 /* Woden brand — extracted from storyisthestrategy.com */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@font-face {
+  font-family: 'GT Pressura';
+  src: url('./assets/fonts/gt-pressura/GT-Pressura-Light.woff2') format('woff2'),
+       url('./assets/fonts/gt-pressura/GT-Pressura-Light.woff') format('woff'),
+       url('./assets/fonts/gt-pressura/GT-Pressura-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GT Pressura';
+  src: url('./assets/fonts/gt-pressura/GT-Pressura-Light-Italic.woff2') format('woff2'),
+       url('./assets/fonts/gt-pressura/GT-Pressura-Light-Italic.woff') format('woff'),
+       url('./assets/fonts/gt-pressura/GT-Pressura-Light-Italic.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GT Pressura';
+  src: url('./assets/fonts/gt-pressura/GT-Pressura-Regular.woff2') format('woff2'),
+       url('./assets/fonts/gt-pressura/GT-Pressura-Regular.woff') format('woff'),
+       url('./assets/fonts/gt-pressura/GT-Pressura-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GT Pressura';
+  src: url('./assets/fonts/gt-pressura/GT-Pressura-Regular-Italic.woff2') format('woff2'),
+       url('./assets/fonts/gt-pressura/GT-Pressura-Regular-Italic.woff') format('woff'),
+       url('./assets/fonts/gt-pressura/GT-Pressura-Regular-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GT Pressura';
+  src: url('./assets/fonts/gt-pressura/GT-Pressura-Bold.woff2') format('woff2'),
+       url('./assets/fonts/gt-pressura/GT-Pressura-Bold.woff') format('woff'),
+       url('./assets/fonts/gt-pressura/GT-Pressura-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GT Pressura';
+  src: url('./assets/fonts/gt-pressura/GT-Pressura-Bold-Italic.woff2') format('woff2'),
+       url('./assets/fonts/gt-pressura/GT-Pressura-Bold-Italic.woff') format('woff'),
+       url('./assets/fonts/gt-pressura/GT-Pressura-Bold-Italic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
 
 :root {
   /* Colors (from --wp--preset--color--* tokens) */
@@ -21,7 +79,7 @@
   --wdn-paper-warm: #F3F3F3;
 
   /* Typography — GT Pressura unavailable; Inter is the cleanest match */
-  --wdn-font:       "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --wdn-font:       "GT Pressura", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --wdn-font-mono:  ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* Radii */
