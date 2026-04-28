@@ -17,6 +17,7 @@ function App() {
     catch { return DEFAULT_TWEAKS; }
   });
   const [chatOpen, setChatOpen] = useStateA(false);
+  const [sgSearch, setSgSearch] = useStateA('');
 
   useEffectA(() => { localStorage.setItem('wdn-tweaks', JSON.stringify(tweaks)); }, [tweaks]);
 
@@ -81,10 +82,10 @@ function App() {
     if (route === '/manager/clients') return <ClientsTable nav={nav} />;
     // client
     if (route === '/client') return <ClientDash nav={nav} />;
-    if (route === '/client/storyguide') return <StoryGuide navPattern={tweaks.navPattern} rhythm={tweaks.rhythm} chatMode={tweaks.chatMode} />;
+    if (route === '/client/storyguide') return <StoryGuide search={sgSearch} onSearchChange={setSgSearch} />;
     if (route.startsWith('/client/projects/')) {
       const id = route.split('/')[3];
-      return <StoryGuide navPattern={tweaks.navPattern} rhythm={tweaks.rhythm} chatMode={tweaks.chatMode} />;
+      return <StoryGuide />;
     }
     if (route === '/client/customize') return <Customize nav={nav} />;
     if (route.startsWith('/client/team/')) {
@@ -94,17 +95,23 @@ function App() {
     if (route === '/client/team') return <Team projectId={null} />;
     if (route === '/client/settings') return <ClientSettings />;
     // employee
-    if (route === '/employee' || route === '/employee/storyguide') return <StoryGuide readOnly navPattern={tweaks.navPattern} rhythm={tweaks.rhythm} chatMode={tweaks.chatMode} />;
+    if (route === '/employee' || route === '/employee/storyguide') return <StoryGuide readOnly search={sgSearch} onSearchChange={setSgSearch} />;
     // fallback
     return <NotFound nav={nav} />;
   };
 
+  const isSgRoute = route === '/client/storyguide' || route === '/employee/storyguide' || route === '/employee';
+  const isSgSearch = isSgRoute || route.includes('storyguide');
+
   return (
     <div className="app-shell">
-      {role && <SideNav role={role} route={route} nav={nav} onLogout={() => { setRole(null); nav('/login'); }} />}
-      <div className="app-content">
-        {role && <SubBar route={route} role={role} />}
-        <div className="app-main">
+      {role && !isSgRoute && <SideNav role={role} route={route} nav={nav} onLogout={() => { setRole(null); nav('/login'); }} />}
+      <div className={'app-content' + (isSgRoute ? ' sg-mode' : '')}>
+        {role && <SubBar route={route} role={role}
+          search={isSgSearch ? sgSearch : null}
+          onSearch={isSgSearch ? setSgSearch : null}
+        />}
+        <div className={'app-main' + (isSgRoute ? ' sg-main' : '')}>
           {renderScreen()}
         </div>
       </div>

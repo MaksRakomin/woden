@@ -129,9 +129,8 @@ function SideNav({ role, route, nav, onLogout }) {
   );
 }
 
-// --- sub bar: breadcrumbs + page-level actions slot ---
-function SubBar({ route, role }) {
-  // Build breadcrumbs from the route.
+// --- sub bar: breadcrumbs + optional search slot ---
+function SubBar({ route, role, search, onSearch }) {
   const parts = route.split('/').filter(Boolean);
   if (!parts.length) return null;
   const rootLabel = { admin: 'Admin', manager: 'Manager', client: 'Client', employee: 'Employee' }[parts[0]] || parts[0];
@@ -148,6 +147,21 @@ function SubBar({ route, role }) {
         ))}
         {!tail.length && <><span className="sep">/</span><span className="here">home</span></>}
       </div>
+      {onSearch != null && (
+        <div className="sg2-subbar-search-wrap">
+          <svg className="sg2-subbar-search-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.4"/>
+            <path d="M10 10L14 14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+          </svg>
+          <input
+            type="text"
+            className="sg2-subbar-search"
+            placeholder="Search StoryGuide..."
+            value={search}
+            onChange={e => onSearch(e.target.value)}
+          />
+        </div>
+      )}
     </div>
   );
 }
