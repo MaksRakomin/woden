@@ -249,7 +249,7 @@ function ManagerDash({ nav }) {
           <div key={p.id} className="wf-box" style={{padding: 18, cursor: 'pointer'}} onClick={() => nav('/manager/projects/' + p.id + '/edit')}>
             <div className="row" style={{justifyContent: 'space-between', marginBottom: 6}}>
               <span className={'wf-tag ' + (p.status === 'published' ? 'accent' : p.status === 'review' ? 'soft' : '')}>{p.status}</span>
-              <span className="mono muted" style={{fontSize: 10}}>{p.sections}/14 sections</span>
+              {/*<span className="mono muted" style={{fontSize: 10}}>{p.sections}/14 sections</span>*/}
             </div>
             <div className="mono muted" style={{fontSize: 11, marginBottom: 4}}>{getCompanyName(p.clientId)}</div>
             <h3 style={{marginBottom: 14}}>{p.name}</h3>
@@ -483,7 +483,7 @@ function ClientsTable({ nav }) {
                       <td>
                         <span className={'wf-tag ' + (p.status === 'published' ? 'accent' : p.status === 'review' ? 'soft' : '')}>{p.status}</span>
                       </td>
-                      <td className="muted" style={{fontSize: 12}}>{p.sections}/14 sections · {p.team.length} members · {p.updated}</td>
+                      <td className="muted" style={{fontSize: 12}}> {p.team.length} members · {p.updated}</td>
                       <td>
                         <button className="wf-btn sm ghost" onClick={e => { e.stopPropagation(); nav('/admin/projects/' + p.id); }}>Edit →</button>
                       </td>

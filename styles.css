@@ -9,6 +9,54 @@
 /* --- Select --- */
 select.wf-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23131215' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
 
+/* --- Editor flow steps (1 Content → 2 Brand) --- */
+.flow-steps { display: flex; align-items: center; gap: 0; margin-top: 10px; }
+.flow-step { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-faint); font-weight: 500; }
+.flow-step.active { color: var(--ink); }
+.flow-step-n { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--ink-faint); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; font-family: var(--mono); transition: all 0.15s; }
+.flow-step.active .flow-step-n { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.flow-step-line { width: 32px; height: 1.5px; background: var(--line); margin: 0 8px; }
+
+/* --- Palette picker --- */
+.palette-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.palette-grid { padding: 3px; }
+.palette-card { border: 2px solid var(--line); border-radius: 10px; padding: 12px; cursor: pointer; transition: border-color 0.12s, outline-color 0.12s, background 0.12s; position: relative; outline: 2px solid transparent; outline-offset: 1px; }
+.palette-card:hover { border-color: var(--ink-faint); }
+.palette-card.selected { border-color: var(--ink); outline-color: var(--ink); background: var(--paper-warm); }
+.palette-swatches { display: flex; gap: 0; margin-bottom: 10px; border-radius: 6px; overflow: hidden; }
+.palette-swatch { flex: 1; height: 40px; }
+.palette-name { font-size: 12px; font-weight: 600; color: var(--ink); }
+.palette-card.selected .palette-name { font-weight: 700; }
+.palette-check { display: none; }
+.palette-selected-label { display: none; font-size: 11px; font-family: var(--mono); color: var(--accent); font-weight: 700; letter-spacing: 0.06em; margin-top: 4px; }
+.palette-card.selected .palette-selected-label { display: block; }
+
+/* --- Project editor shell --- */
+.editor-shell { display: flex; gap: 20px; align-items: flex-start; }
+.editor-sections { width: 210px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; position: sticky; top: 0; }
+.editor-section-item { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 0.1s; border: 1.5px solid transparent; }
+.editor-section-item:hover { background: var(--paper-warm); }
+.editor-section-item.active { background: var(--paper-warm); border-color: var(--ink); font-weight: 700; }
+.editor-section-item.filled .editor-section-n { background: var(--accent); color: #fff; }
+.editor-section-item.active .editor-section-n { background: var(--ink); color: var(--paper); }
+.editor-section-item.active.filled .editor-section-n { background: var(--accent); }
+.editor-section-n { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: var(--paper-warm); border: 1.5px solid var(--ink-faint); border-radius: 50%; font-size: 10px; flex-shrink: 0; font-weight: 700; font-family: var(--mono); transition: background 0.1s; }
+.editor-section-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* --- WYSIWYG text editor --- */
+.wysiwyg { display: flex; flex-direction: column; flex: 1; }
+.wysiwyg-toolbar { display: flex; align-items: center; gap: 4px; padding: 10px 16px; border-bottom: 1.5px solid var(--line); flex-wrap: wrap; background: var(--paper-warm); }
+.wysiwyg-tbtn { display: inline-flex; align-items: center; justify-content: center; background: var(--paper); border: 1.5px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 13px; font-family: inherit; font-style: normal; font-weight: 400; color: var(--ink); line-height: 1.4; transition: border-color 0.1s, background 0.1s; white-space: nowrap; min-width: 28px; }
+.wysiwyg-tbtn:hover { border-color: var(--ink); background: var(--paper); }
+.wysiwyg-tbtn:active { background: var(--paper-warm); }
+.wysiwyg-tbtn-bold { font-weight: 700; }
+.wysiwyg-tbtn-italic { font-style: italic; font-weight: 600; }
+.wysiwyg-tbtn-mono { font-family: var(--mono, monospace); font-size: 11px; letter-spacing: 0.04em; }
+.wysiwyg-divider { width: 1px; height: 22px; background: var(--line); margin: 0 6px; flex-shrink: 0; }
+.wysiwyg-wordcount { font-size: 11px; font-family: var(--mono); color: var(--ink-faint); padding: 4px 8px; }
+.wysiwyg-textarea { flex: 1; width: 100%; min-height: 440px; padding: 28px 32px; border: none; outline: none; resize: none; font-size: 16px; line-height: 1.8; font-family: inherit; background: transparent; color: var(--ink); box-sizing: border-box; overflow-y: auto; }
+.wysiwyg-textarea::placeholder { color: var(--ink-faint); font-style: italic; }
+
 /* --- Accordion (ClientsTable) --- */
 .accordion-row { transition: background 0.12s; }
 .accordion-row:hover { background: var(--paper-warm, #f3f3f3); }
