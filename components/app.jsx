@@ -66,10 +66,9 @@ function App() {
     if (route === '/admin') return <AdminDash nav={nav} />;
     if (route === '/admin/managers') return <ManagersTable />;
     if (route === '/admin/clients') return <ClientsTable nav={nav} />;
-    if (route === '/admin/projects' || route.startsWith('/admin/projects/')) {
+    if (route.startsWith('/admin/projects/')) {
       const id = route.split('/')[3];
-      if (id) return <ProjectEditor nav={nav} projectId={id} />;
-      return <ClientsTable nav={nav} />;
+      return <ProjectEditor nav={nav} projectId={id} />;
     }
     if (route === '/admin/stats') return <StatsPage />;
     // manager
@@ -83,8 +82,16 @@ function App() {
     // client
     if (route === '/client') return <ClientDash nav={nav} />;
     if (route === '/client/storyguide') return <StoryGuide navPattern={tweaks.navPattern} rhythm={tweaks.rhythm} chatMode={tweaks.chatMode} />;
+    if (route.startsWith('/client/projects/')) {
+      const id = route.split('/')[3];
+      return <StoryGuide navPattern={tweaks.navPattern} rhythm={tweaks.rhythm} chatMode={tweaks.chatMode} />;
+    }
     if (route === '/client/customize') return <Customize nav={nav} />;
-    if (route === '/client/team') return <Team />;
+    if (route.startsWith('/client/team/')) {
+      const id = route.split('/')[3];
+      return <Team projectId={id} />;
+    }
+    if (route === '/client/team') return <Team projectId={null} />;
     if (route === '/client/settings') return <ClientSettings />;
     // employee
     if (route === '/employee' || route === '/employee/storyguide') return <StoryGuide readOnly navPattern={tweaks.navPattern} rhythm={tweaks.rhythm} chatMode={tweaks.chatMode} />;

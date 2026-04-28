@@ -1,4 +1,24 @@
 /* Woden brand — extracted from storyisthestrategy.com */
+
+/* --- Modal --- */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: grid; place-items: center; }
+.modal-box { width: 480px; max-width: calc(100vw - 40px); padding: 32px !important; }
+.modal-form { display: flex; flex-direction: column; gap: 14px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+
+/* --- Select --- */
+select.wf-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23131215' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+
+/* --- Accordion (ClientsTable) --- */
+.accordion-row { transition: background 0.12s; }
+.accordion-row:hover { background: var(--paper-warm, #f3f3f3); }
+.accordion-row.open { background: var(--paper-warm, #f3f3f3); }
+.accordion-child { background: var(--paper-warm, #f3f3f3); animation: accordion-in 0.15s ease; }
+.accordion-child:last-child td { border-bottom: 2px solid var(--ink, #131215) !important; }
+@keyframes accordion-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
 @font-face {
   font-family: 'GT Pressura';
   src: url('./assets/fonts/gt-pressura/GT-Pressura-Light.woff2') format('woff2'),

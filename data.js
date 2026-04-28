@@ -7,16 +7,28 @@ const MOCK_USERS = {
 };
 
 const CLIENT_COMPANIES = [
-  { id: 'c1', name: 'Meridian Coffee Co.',  manager: 'Marcus Reed',   status: 'published', seats: '4 / 5', updated: '2 days ago'  },
-  { id: 'c2', name: 'Northwind Logistics',  manager: 'Marcus Reed',   status: 'draft',     seats: '1 / 5', updated: '5 days ago'  },
-  { id: 'c3', name: 'Kestrel Medical',      manager: 'Priya Shah',    status: 'published', seats: '3 / 5', updated: '1 wk ago'    },
-  { id: 'c4', name: 'Forgeworks',           manager: 'Priya Shah',    status: 'draft',     seats: '2 / 5', updated: '3 days ago'  },
-  { id: 'c5', name: 'Luma Therapeutics',    manager: 'Jonah Okafor',  status: 'review',    seats: '0 / 5', updated: 'yesterday'   },
-  { id: 'c6', name: 'Bridgeport Foods',     manager: 'Jonah Okafor',  status: 'published', seats: '5 / 5', updated: '2 wk ago'    },
+  { id: 'c1', name: 'Meridian Coffee Co.',  manager: 'Marcus Reed'  },
+  { id: 'c2', name: 'Northwind Logistics',  manager: 'Marcus Reed'  },
+  { id: 'c3', name: 'Kestrel Medical',      manager: 'Priya Shah'   },
+  { id: 'c4', name: 'Forgeworks',           manager: 'Priya Shah'   },
+  { id: 'c5', name: 'Luma Therapeutics',    manager: 'Jonah Okafor' },
+  { id: 'c6', name: 'Bridgeport Foods',     manager: 'Jonah Okafor' },
+];
+
+const PROJECTS = [
+  { id: 'p1', clientId: 'c1', name: 'Brand Strategy 2024',  status: 'published', sections: 14, updated: '2 days ago', team: ['elena@meridian.co', 'david@meridian.co', 'rachel@meridian.co'] },
+  { id: 'p2', clientId: 'c1', name: 'Product Launch',       status: 'draft',     sections: 6,  updated: '1 day ago',  team: ['elena@meridian.co'] },
+  { id: 'p3', clientId: 'c2', name: 'Northwind Rebrand',    status: 'draft',     sections: 3,  updated: '5 days ago', team: [] },
+  { id: 'p4', clientId: 'c3', name: 'Kestrel Identity',     status: 'published', sections: 14, updated: '1 wk ago',   team: ['james@kestrel.co', 'anna@kestrel.co'] },
+  { id: 'p5', clientId: 'c3', name: 'Kestrel Messaging',    status: 'review',    sections: 10, updated: '3 days ago', team: ['james@kestrel.co'] },
+  { id: 'p6', clientId: 'c4', name: 'Forgeworks Brand',     status: 'draft',     sections: 3,  updated: '3 days ago', team: [] },
+  { id: 'p7', clientId: 'c5', name: 'Luma Brand Voice',     status: 'review',    sections: 7,  updated: 'yesterday',  team: [] },
+  { id: 'p8', clientId: 'c6', name: 'Bridgeport Rebrand',   status: 'published', sections: 14, updated: '2 wk ago',   team: ['tom@bridgeport.co', 'sarah@bridgeport.co', 'mike@bridgeport.co'] },
+  { id: 'p9', clientId: 'c6', name: 'Bridgeport Digital',   status: 'draft',     sections: 4,  updated: '1 wk ago',   team: ['tom@bridgeport.co'] },
 ];
 
 const MANAGERS = [
-  { id: 'm1', name: 'Marcus Reed',  email: 'marcus@woden.co',  clients: 2, projects: 4 },
+  { id: 'm1', name: 'Marcus Reed',  email: 'marcus@woden.co',  clients: 2, projects: 3 },
   { id: 'm2', name: 'Priya Shah',   email: 'priya@woden.co',   clients: 2, projects: 3 },
   { id: 'm3', name: 'Jonah Okafor', email: 'jonah@woden.co',   clients: 2, projects: 3 },
 ];
@@ -102,6 +114,6 @@ function mockChatReply(q) {
 }
 
 window.WODEN = {
-  MOCK_USERS, CLIENT_COMPANIES, MANAGERS, SECTION_TITLES, MERIDIAN,
+  MOCK_USERS, CLIENT_COMPANIES, PROJECTS, MANAGERS, SECTION_TITLES, MERIDIAN,
   CHAT_SUGGESTIONS, mockChatReply,
 };

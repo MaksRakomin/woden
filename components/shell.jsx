@@ -71,23 +71,19 @@ function SideNav({ role, route, nav, onLogout }) {
       ['/admin',          'Dashboard', 'dashboard'],
       ['/admin/managers', 'Managers',  'managers'],
       ['/admin/clients',  'Clients',   'clients'],
-      ['/admin/projects', 'Projects',  'projects'],
       ['/admin/stats',    'Stats',     'stats'],
     ],
     manager: [
       { section: 'Work' },
       ['/manager',          'Dashboard', 'dashboard'],
-      ['/manager/projects', 'Projects',  'projects'],
+      // ['/manager/projects', 'Projects',  'projects'],
       ['/manager/clients',  'Clients',   'clients'],
     ],
     client: [
-      { section: 'Your StoryGuide' },
-      ['/client',             'Home',       'home'],
-      ['/client/storyguide',  'StoryGuide', 'storyguide'],
-      { section: 'Workspace' },
-      ['/client/customize',   'Customize',  'customize'],
-      ['/client/team',        'Team',       'team'],
-      ['/client/settings',    'Settings',   'settings'],
+      { section: 'Your workspace' },
+      ['/client',           'Home',      'home'],
+      ['/client/customize', 'Customize', 'customize'],
+      ['/client/settings',  'Settings',  'settings'],
     ],
     employee: [
       { section: 'Brand' },
@@ -231,4 +227,29 @@ function Note({ children, style }) {
   return <div className="wf-note" style={style}>{children}</div>;
 }
 
-Object.assign(window, { ToastHost, useRoute, useRole, SideNav, SubBar, RoleSwitcher, Rect, Lines, Card, Note, toast });
+// --- modal ---
+function Modal({ title, onClose, children }) {
+  useEffect(() => {
+    const h = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onClose]);
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="wf-box modal-box" onClick={e => e.stopPropagation()}>
+        <div className="row" style={{justifyContent: 'space-between', marginBottom: 20}}>
+          <h3>{title}</h3>
+          <button className="wf-btn sm ghost" onClick={onClose}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// --- form fields helper ---
+function Field({ label, children }) {
+  return <div><label className="wf-label">{label}</label>{children}</div>;
+}
+
+Object.assign(window, { ToastHost, useRoute, useRole, SideNav, SubBar, RoleSwitcher, Rect, Lines, Card, Note, toast, Modal, Field });

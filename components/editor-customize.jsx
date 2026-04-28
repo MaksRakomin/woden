@@ -159,13 +159,18 @@ function Customize({ nav }) {
   );
 }
 
-function Team() {
-  const [emails, setEmails] = useStateE(['david@meridian.co','rachel@meridian.co','tom@meridian.co','sofia@meridian.co']);
+function Team({ projectId }) {
+  const project = window.WODEN.PROJECTS.find(p => p.id === projectId) || window.WODEN.PROJECTS[0];
+  const [emails, setEmails] = useStateE(project ? [...project.team] : []);
   const [inv, setInv] = useStateE('');
+  const persist = (updated) => {
+    if (project) project.team = updated;
+  };
   const add = () => {
-    if (!inv) return;
-    if (emails.length >= 5) return toast('Seat limit reached (5)');
-    setEmails([...emails, inv]);
+    if (!inv.trim()) return;
+    const updated = [...emails, inv.trim()];
+    persist(updated);
+    setEmails(updated);
     setInv('');
     toast('Invite sent');
   };
@@ -173,9 +178,10 @@ function Team() {
     <div className="screen">
       <div className="row" style={{justifyContent:'space-between', marginBottom: 6}}>
         <h1 className="scribble">Team</h1>
-        <span className="wf-tag">{emails.length} / 5 seats</span>
+        <span className="wf-tag">{emails.length} members</span>
       </div>
-      <p className="muted" style={{marginBottom: 24}}>Invite up to 5 colleagues from Meridian Coffee Co. to read your StoryGuide.</p>
+      {project && <p className="mono muted" style={{fontSize: 11, letterSpacing: '0.1em', marginBottom: 6}}>{project.name.toUpperCase()}</p>}
+      <p className="muted" style={{marginBottom: 24}}>Invite colleagues to access this project's StoryGuide.</p>
 
       <div className="grid" style={{gridTemplateColumns: '1.3fr 1fr', gap: 24}}>
         <Card>
@@ -189,7 +195,7 @@ function Team() {
                   <div className="mono muted" style={{fontSize: 11}}>{e}</div>
                 </div>
                 <span className="wf-tag">{i === 0 ? 'Active' : 'Invited'}</span>
-                <button className="wf-btn sm ghost" onClick={() => { setEmails(emails.filter((_,j) => j!==i)); toast('Removed'); }}>Remove</button>
+                <button className="wf-btn sm ghost" onClick={() => { const updated = emails.filter((_,j) => j!==i); persist(updated); setEmails(updated); toast('Removed'); }}>Remove</button>
               </div>
             ))}
           </div>
