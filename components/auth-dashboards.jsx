@@ -107,21 +107,16 @@ function NewProjectModal({ availableCompanies, currentRole, lockedClientId, onCl
         </Field>
 
         <div>
-          <Label>Clients{lockedClientId ? '' : ' (one or more)'}</Label>
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {availableCompanies.map(c => {
-              const sel = selectedClientIds.includes(c.id);
-              const locked = lockedClientId === c.id;
-              return (
-                  <button key={c.id} type="button" disabled={locked} onClick={() => !locked && toggleClient(c.id)}
-                          className={`px-3 py-1 rounded-full border text-[12px] font-bold uppercase tracking-wide transition-colors ${sel ? 'bg-contrast text-base border-contrast' : 'bg-base text-contrast border-light-gray hover:border-contrast'} ${locked ? 'opacity-70 cursor-not-allowed' : ''}`}>
-                    {c.name}{locked ? ' · locked' : ''}
-                  </button>
-              );
-            })}
-          </div>
+          <Label>Clients</Label>
+          <MultiSelect
+            options={availableCompanies}
+            value={selectedClientIds}
+            onChange={vals => setSelectedClientIds(lockedClientId && !vals.includes(lockedClientId) ? [...vals, lockedClientId] : vals)}
+            disabled={lockedClientId ? [lockedClientId] : []}
+            placeholder="Choose clients..."
+          />
           {!creatingClient && !lockedClientId && (
-              <Button size="sm" variant="ghost" onClick={() => setCreatingClient(true)}>+ Create new client</Button>
+              <Button size="sm" variant="ghost" className="mt-2" onClick={() => setCreatingClient(true)}>+ Create new client</Button>
           )}
           {creatingClient && (
               <div className="flex flex-col gap-2 mt-2 p-3 border border-light-gray rounded-lg bg-paper-warm">
@@ -134,18 +129,13 @@ function NewProjectModal({ availableCompanies, currentRole, lockedClientId, onCl
 
         {isAdmin && (
             <div>
-              <Label>Assign managers</Label>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {window.WODEN.MANAGERS.map(m => {
-                  const sel = selectedManagerIds.includes(m.id);
-                  return (
-                      <button key={m.id} type="button" onClick={() => toggleManager(m.id)}
-                              className={`px-3 py-1 rounded-full border text-[12px] font-bold uppercase tracking-wide transition-colors ${sel ? 'bg-contrast text-base border-contrast' : 'bg-base text-contrast border-light-gray hover:border-contrast'}`}>
-                        {m.name}
-                      </button>
-                  );
-                })}
-              </div>
+              <Label>Managers</Label>
+              <MultiSelect
+                options={window.WODEN.MANAGERS}
+                value={selectedManagerIds}
+                onChange={setSelectedManagerIds}
+                placeholder="Choose managers..."
+              />
             </div>
         )}
 
@@ -793,4 +783,138 @@ function StatsPage() {
   );
 }
 
-Object.assign(window, { Login, AdminDash, ManagerDash, ClientDash, EmployeeHome, EmployeeSettings, ManagersTable, ClientsTable, AllProjectsTable, TemplatesPage, StatsPage, NewProjectModal });
+function ClientEmployees({ nav }) {
+  const clientId = 'c1';
+  const myProjects = window.WODEN.PROJECTS.filter(p => (p.clientIds || []).includes(clientId));
+
+  // Derive employees list from all project teams + seed with known employee
+  const seedEmails = ['david@meridian.co', 'rachel@meridian.co', 'elena@meridian.co'];
+  const allEmails = new Set(seedEmails);
+  myProjects.forEach(p => (p.team || []).forEach(e => allEmails.add(e)));
+
+  const [employees, setEmployees] = useStateL([...allEmails]);
+  const [inviteEmail, setInviteEmail] = useStateL('');
+  const [assignModal, setAssignModal] = useStateL(null); // email being assigned
+  const [tick, setTick] = useStateL(0);
+
+  const addEmployee = () => {
+    const v = inviteEmail.trim().toLowerCase();
+    if (!v || !v.includes('@')) return toast('Enter a valid email');
+    if (employees.includes(v)) return toast('Already added');
+    setEmployees(e => [...e, v]);
+    setInviteEmail('');
+    toast('Employee invited');
+  };
+
+  const removeEmployee = (email) => {
+    // Remove from all project teams
+    myProjects.forEach(p => { p.team = (p.team || []).filter(e => e !== email); });
+    setEmployees(e => e.filter(x => x !== email));
+    setTick(t => t + 1);
+    toast('Employee removed');
+  };
+
+  const getAssignedProjects = (email) => myProjects.filter(p => (p.team || []).includes(email));
+
+  return (
+      <div className="animate-screen-in">
+        {assignModal && (
+            <Modal title={`Assign ${assignModal.split('@')[0]}`} onClose={() => setAssignModal(null)}>
+              <AssignProjectsModal email={assignModal} projects={myProjects} onClose={() => { setAssignModal(null); setTick(t => t + 1); }} />
+            </Modal>
+        )}
+
+        <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-end mb-5">
+          <div>
+            <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">Employees</h1>
+            <p className="text-ink-soft mt-1">Manage who has access and which projects they're on.</p>
+          </div>
+          <span className="font-mono text-xs text-ink-faint self-start md:self-auto">{employees.length} member{employees.length !== 1 ? 's' : ''}</span>
+        </div>
+
+        <Card className="mb-6">
+          <h3 className="text-lg font-bold mb-3">Invite employee</h3>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              placeholder="name@company.co"
+              value={inviteEmail}
+              onChange={e => setInviteEmail(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addEmployee()}
+              className="flex-1"
+            />
+            <Button variant="primary" onClick={addEmployee}>Invite</Button>
+          </div>
+        </Card>
+
+        <div className="flex flex-col gap-3">
+          {employees.map(email => {
+            const assigned = getAssignedProjects(email);
+            const initials = email[0].toUpperCase();
+            return (
+                <Card key={email} pad="p-4 sm:p-5" className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shrink-0">{initials}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold truncate">{email.split('@')[0]}</div>
+                    <div className="font-mono text-ink-soft text-[11px] truncate">{email}</div>
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {assigned.length === 0
+                        ? <span className="font-mono text-[10px] text-ink-faint uppercase">Not assigned to any project</span>
+                        : assigned.map(p => <Badge key={p.id} variant="soft">{p.name}</Badge>)
+                      }
+                    </div>
+                  </div>
+                  <div className="flex gap-2 flex-wrap shrink-0">
+                    <Button size="sm" variant="primary" onClick={() => setAssignModal(email)}>Assign to project</Button>
+                    <Button size="sm" variant="ghost" onClick={() => removeEmployee(email)}>Remove</Button>
+                  </div>
+                </Card>
+            );
+          })}
+          {employees.length === 0 && (
+              <Card pad="p-8" className="text-center">
+                <p className="text-ink-soft mb-1">No employees yet.</p>
+                <p className="font-mono text-[11px] text-ink-faint">Invite someone above to get started.</p>
+              </Card>
+          )}
+        </div>
+      </div>
+  );
+}
+
+function AssignProjectsModal({ email, projects, onClose }) {
+  const [tick, setTick] = useStateL(0);
+
+  const toggle = (project) => {
+    const team = project.team || [];
+    if (team.includes(email)) {
+      project.team = team.filter(e => e !== email);
+    } else {
+      project.team = [...team, email];
+    }
+    setTick(t => t + 1);
+  };
+
+  return (
+      <div className="flex flex-col gap-3">
+        <p className="text-ink-soft text-sm mb-1">Toggle which projects <span className="font-bold text-contrast">{email}</span> is assigned to.</p>
+        {projects.map(p => {
+          const assigned = (p.team || []).includes(email);
+          return (
+              <button key={p.id} type="button" onClick={() => toggle(p)}
+                      className={`flex items-center justify-between gap-3 px-4 py-3 border-2 rounded-xl text-left transition-colors w-full ${assigned ? 'border-contrast bg-contrast text-base' : 'border-light-gray bg-base text-contrast hover:border-contrast'}`}>
+                <div>
+                  <div className="font-bold text-sm">{p.name}</div>
+                  <Badge variant={p.status === 'published' ? 'accent' : p.status === 'review' ? 'soft' : 'default'} className={assigned ? 'border-white/30' : ''}>{p.status}</Badge>
+                </div>
+                <span className={`font-bold text-xs uppercase tracking-widest shrink-0 ${assigned ? 'text-base' : 'text-primary'}`}>{assigned ? '✓ Assigned' : '+ Assign'}</span>
+              </button>
+          );
+        })}
+        <div className="flex justify-end mt-2">
+          <Button variant="primary" onClick={onClose}>Done</Button>
+        </div>
+      </div>
+  );
+}
+
+Object.assign(window, { Login, AdminDash, ManagerDash, ClientDash, EmployeeHome, EmployeeSettings, ManagersTable, ClientsTable, AllProjectsTable, TemplatesPage, StatsPage, NewProjectModal, ClientEmployees });

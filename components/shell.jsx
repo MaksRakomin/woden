@@ -140,6 +140,7 @@ const NAV_ICONS = {
   home:      <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>,
   storyguide:<svg viewBox="0 0 24 24"><path d="M4 4h10a4 4 0 0 1 4 4v12"/><path d="M4 4v14a2 2 0 0 0 2 2h12"/><path d="M8 9h6M8 13h6"/></svg>,
   customize: <svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6.5" cy="12" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M3 6.5h8M16 6.5h5M3 12h1M9 12h12M3 17h11M19.5 17H21"/></svg>,
+  employees: <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v2"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>,
   settings:  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
 };
 
@@ -148,8 +149,8 @@ function SideNav({ role, route, nav, onLogout, mobileOpen, setMobileOpen }) {
   const roleLabels = { admin: 'Super-admin', manager: 'Strategist', client: 'Client admin', employee: 'Employee' };
   const navs = {
     admin: [{ section: 'Operations' }, ['/admin', 'Dashboard', 'dashboard'], ['/admin/managers', 'Managers', 'managers'], ['/admin/clients', 'Clients', 'clients'], ['/admin/projects', 'Projects', 'projects'], ['/admin/templates', 'Templates', 'templates'], ['/admin/stats', 'Stats', 'stats']],
-    manager: [{ section: 'Work' }, ['/manager', 'Dashboard', 'dashboard'], ['/manager/projects', 'Projects', 'projects'], ['/manager/clients', 'Clients', 'clients']],
-    client: [{ section: 'Your workspace' }, ['/client', 'Home', 'home'], ['/client/settings', 'Settings', 'settings']],
+    manager: [{ section: 'Work' }, ['/manager', 'Dashboard', 'dashboard'], ['/manager/projects', 'Projects', 'projects'], ['/manager/clients', 'Clients', 'clients'], ['/manager/templates', 'Templates', 'templates']],
+    client: [{ section: 'Your workspace' }, ['/client', 'Home', 'home'], ['/client/employees', 'Employees', 'employees'], ['/client/settings', 'Settings', 'settings']],
     employee: [{ section: 'Your workspace' }, ['/employee', 'Home', 'home'], ['/employee/settings', 'Settings', 'settings']],
   };
   const items = (role && navs[role]) || [];
@@ -283,4 +284,60 @@ function RoleSwitcher({ role, setRole, nav, chatOpen }) {
   );
 }
 
-Object.assign(window, { ToastHost, useRoute, useRole, SideNav, SubBar, RoleSwitcher, Card, Modal, Button, Input, Select, Label, Badge, Field, Note, Rect, Lines, toast });
+function MultiSelect({ options, value = [], onChange, placeholder = 'Select...', disabled = [], className = '' }) {
+  const [open, setOpen] = useState(false);
+  const ref = React.useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const toggle = (id) => {
+    if (disabled.includes(id)) return;
+    onChange(value.includes(id) ? value.filter(x => x !== id) : [...value, id]);
+  };
+
+  const selected = options.filter(o => value.includes(o.id));
+
+  return (
+      <div ref={ref} className={`relative ${className}`}>
+        <button type="button" onClick={() => setOpen(o => !o)}
+                className="w-full min-h-[42px] px-3.5 py-2 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus flex items-center gap-2 flex-wrap text-left transition-colors hover:border-contrast">
+          {selected.length === 0
+            ? <span className="text-ink-faint flex-1">{placeholder}</span>
+            : selected.map(o => (
+                <span key={o.id} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-contrast text-base text-[11px] font-bold uppercase tracking-wide">
+                  {o.name}
+                  {!disabled.includes(o.id) && (
+                    <span className="opacity-60 hover:opacity-100 cursor-pointer leading-none" onClick={e => { e.stopPropagation(); toggle(o.id); }}>✕</span>
+                  )}
+                </span>
+              ))
+          }
+          <span className="ml-auto text-ink-faint text-[10px] shrink-0">{open ? '▴' : '▾'}</span>
+        </button>
+
+        {open && (
+            <div className="absolute z-[300] top-full mt-1 left-0 right-0 bg-base border border-gray rounded-xl shadow-lg overflow-hidden">
+              {options.map(o => {
+                const sel = value.includes(o.id);
+                const lock = disabled.includes(o.id);
+                return (
+                    <button key={o.id} type="button" disabled={lock} onClick={() => toggle(o.id)}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors ${lock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-super-light-gray cursor-pointer'} ${sel ? 'bg-primary-bg-subtle' : ''}`}>
+                      <span className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${sel ? 'bg-contrast border-contrast' : 'border-gray'}`}>
+                        {sel && <span className="text-base text-[10px] leading-none font-bold">✓</span>}
+                      </span>
+                      <span className={`flex-1 ${sel ? 'font-bold' : ''}`}>{o.name}</span>
+                      {lock && <span className="font-mono text-[9px] text-ink-faint uppercase">locked</span>}
+                    </button>
+                );
+              })}
+            </div>
+        )}
+      </div>
+  );
+}
+Object.assign(window, { ToastHost, useRoute, useRole, SideNav, SubBar, RoleSwitcher, Card, Modal, Button, Input, Select, Label, Badge, Field, Note, Rect, Lines, toast, MultiSelect });

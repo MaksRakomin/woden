@@ -28,7 +28,9 @@ function App() {
     if (route === '/manager/projects') return <AllProjectsTable nav={nav} role="manager" />;
     if (route.startsWith('/manager/projects/')) return <ProjectEditor nav={nav} projectId={route.split('/')[3]} role="manager" />;
     if (route === '/manager/clients') return <ClientsTable nav={nav} />;
+    if (route === '/manager/templates') return <TemplatesPage />;
     if (route === '/client') return <ClientDash nav={nav} />;
+    if (route === '/client/employees') return <ClientEmployees nav={nav} />;
     if (route.endsWith('/edit') && route.startsWith('/client/projects/')) return <ProjectEditor nav={nav} projectId={route.split('/')[3]} role="client" />;
     if (route === '/client/storyguide' || route.startsWith('/client/projects/')) return <StoryGuide search={sgSearch} onSearchChange={setSgSearch} />;
     if (route === '/client/settings') return <ClientSettings />;
