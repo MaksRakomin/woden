@@ -39,17 +39,26 @@ function StoryGuide({ readOnly, search = '', onSearchChange }) {
     const matchesSearch = (label) => !searchLower || label.toLowerCase().includes(searchLower);
 
     return (
-        <div className="flex h-full bg-super-light-gray -m-10">
-            <aside className="w-[240px] shrink-0 bg-base border-r border-light-gray flex flex-col sticky top-0 h-full overflow-y-auto overflow-x-hidden">
-                <div className="px-4 pt-3.5 pb-2.5 border-b border-light-gray shrink-0">
-                    <div className="text-[13px] font-bold text-contrast truncate">{EFC.client}</div>
-                    <div className="inline-block mt-1 px-2 py-0.5 bg-contrast text-base rounded text-[9px] font-bold tracking-[0.1em] uppercase">StoryEngine</div>
+        <div className="flex h-full min-h-0 bg-super-light-gray">
+            <aside className="w-[240px] shrink-0 bg-base border-r border-light-gray flex flex-col h-full overflow-hidden">
+                <div className="px-4 pt-4 pb-3 border-b border-light-gray shrink-0">
+                    <div className="text-[12px] font-bold text-contrast truncate mb-1">{EFC.client}</div>
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-contrast text-base rounded text-[9px] font-bold tracking-[0.12em] uppercase">
+                        <span style={{color: '#f5c842'}}>⚡</span> StoryEngine
+                    </div>
                 </div>
-                <nav className="flex-1 overflow-y-auto py-2">
+                <nav className="flex-1 overflow-y-auto py-1.5">
                     {SG_NAV.map(entry => {
                         if (entry.type === 'item') {
                             if (!matchesSearch(entry.label)) return null;
-                            return <button key={entry.id} className={`w-full text-left flex items-center gap-2 px-3 py-1.5 text-[13px] font-sans truncate transition-colors ${page === entry.id ? 'text-primary font-bold bg-primary-bg-subtle' : 'text-ink-soft hover:bg-super-light-gray hover:text-contrast'}`} onClick={() => goPage(entry.id)}><span className={`shrink-0 w-4 text-center text-[11px] ${page === entry.id ? 'opacity-100' : 'opacity-50'}`}>{entry.icon}</span>{entry.label}</button>;
+                            return (
+                                <button key={entry.id} onClick={() => goPage(entry.id)}
+                                    className={`w-full text-left flex items-center gap-2 px-3.5 py-2 text-[13px] font-sans truncate transition-colors
+                                        ${page === entry.id ? 'text-primary font-semibold bg-primary-bg-subtle' : 'text-ink-soft hover:bg-super-light-gray hover:text-contrast'}`}>
+                                    <span className={`shrink-0 w-4 text-center text-[11px] ${page === entry.id ? 'opacity-100' : 'opacity-40'}`}>{entry.icon}</span>
+                                    {entry.label}
+                                </button>
+                            );
                         }
                         const visibleItems = entry.items.filter(i => matchesSearch(i.label) || matchesSearch(entry.label));
                         if (searchLower && visibleItems.length === 0) return null;
@@ -57,19 +66,37 @@ function StoryGuide({ readOnly, search = '', onSearchChange }) {
                         const isActiveSection = entry.items.some(i => i.id === page);
                         return (
                             <div key={entry.id}>
-                                <button className={`flex items-center gap-2 w-full text-left px-3 py-2 text-[13px] font-semibold font-sans transition-colors hover:bg-super-light-gray ${isActiveSection ? 'text-primary' : 'text-contrast'}`} onClick={() => toggleGroup(entry.id)}><span className="shrink-0 w-4 text-center text-[11px] opacity-50">{entry.icon}</span>{entry.label}<span className="ml-auto text-[10px] text-ink-faint shrink-0">{isOpen ? '▾' : '▸'}</span></button>
+                                <button onClick={() => toggleGroup(entry.id)}
+                                    className={`flex items-center gap-2 w-full text-left px-3.5 py-2 text-[13px] font-semibold font-sans transition-colors hover:bg-super-light-gray
+                                        ${isActiveSection ? 'text-primary' : 'text-contrast'}`}>
+                                    <span className="shrink-0 w-4 text-center text-[11px] opacity-40">{entry.icon}</span>
+                                    {entry.label}
+                                    <span className="ml-auto text-[10px] text-ink-faint shrink-0">{isOpen ? '▾' : '▸'}</span>
+                                </button>
                                 {isOpen && entry.items.map(item => {
                                     if (!matchesSearch(item.label) && !matchesSearch(entry.label)) return null;
-                                    return <button key={item.id} className={`w-full text-left flex items-center gap-2 py-1.5 text-[13px] font-sans truncate transition-colors ${item.sub2 ? 'pl-9 text-xs text-ink-faint' : 'pl-6'} ${page === item.id ? 'text-primary font-bold bg-primary-bg-subtle' : 'text-ink-soft hover:bg-super-light-gray hover:text-contrast'}`} onClick={() => goPage(item.id)}>{item.sub2 ? '↳ ' : ''}{item.label}</button>;
+                                    return (
+                                        <button key={item.id} onClick={() => goPage(item.id)}
+                                            className={`w-full text-left flex items-center gap-2 py-1.5 text-[13px] font-sans truncate transition-colors
+                                                ${item.sub2 ? 'pl-10 text-[11px] text-ink-faint' : 'pl-7'}
+                                                ${page === item.id ? 'text-primary font-semibold bg-primary-bg-subtle' : 'text-ink-soft hover:bg-super-light-gray hover:text-contrast'}`}>
+                                            {item.sub2 ? <span className="text-ink-faint mr-0.5">↳</span> : null}
+                                            {item.label}
+                                        </button>
+                                    );
                                 })}
                             </div>
                         );
                     })}
                 </nav>
-                <div className="px-3 py-2.5 border-t border-light-gray text-[10px] text-ink-faint shrink-0">© 2025 Woden, Ltd. &amp; EFC International</div>
+                <div className="px-3.5 py-2.5 border-t border-light-gray text-[10px] text-ink-faint shrink-0 leading-[1.5]">
+                    © 2025 Woden, Ltd. &amp; {EFC.client}
+                </div>
             </aside>
-            <main className="flex-1 overflow-y-auto p-8 max-w-[860px]" ref={mainRef}>
-                <SGPage id={page} goPage={goPage} readOnly={readOnly} />
+            <main className="flex-1 overflow-y-auto" ref={mainRef}>
+                <div className="max-w-[1240px] mx-auto px-8 py-8">
+                    <SGPage id={page} goPage={goPage} readOnly={readOnly} />
+                </div>
             </main>
         </div>
     );
@@ -126,46 +153,99 @@ function PageHome({ goPage }) {
     }
 
     return (
-        <div>
-            <div className="bg-contrast rounded-2xl p-8 mb-6 text-base">
-                <div className="text-[10px] uppercase tracking-[0.14em] text-primary mb-1.5">EFC International</div>
-                <div className="text-[28px] font-extrabold mb-2.5 leading-[1.15]">Digital StoryGuide</div>
-                <div className="text-[14px] text-white/65 leading-[1.7] max-w-[500px]">Your story is your strategy. This is where it lives. Every section is built on EFC's StoryKernel — a story about your customer, the world they're navigating, and why EFC is uniquely positioned to help them succeed.</div>
+        <div className="flex flex-col gap-5">
+            {/* Hero */}
+            <div className="bg-contrast rounded-2xl px-8 py-7">
+                <div className="text-[10px] uppercase tracking-[0.14em] text-primary mb-2 font-bold">EFC International</div>
+                <div className="text-[26px] font-extrabold text-base mb-2.5 leading-[1.15]">Digital StoryGuide</div>
+                <div className="text-[13px] text-white/60 leading-[1.75] max-w-[480px]">
+                    Your story is your strategy. This is where it lives. Every section is built on EFC's StoryKernel — a story about your customer, the world they're navigating, and why EFC is uniquely positioned to help them succeed.
+                </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-5">
+
+            {/* Nav cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
-                    ['sk-full',  '◈', 'The StoryKernel', 'EFC\'s complete nine-part strategic narrative. Start here if you\'re new to the brand.'],
-                    ['mh-intro', '◇', 'Messaging Hierarchy', 'Mission, vision, values, positioning, brand promise, and differentiators.'],
-                    ['cj-intro', '◉', 'Customer Journey', 'Messaging mapped to every stage of the buying experience.'],
-                    ['app-research', '◇', 'Appendix', 'Research insights, competitive analysis, and relevant documents.'],
+                    ['sk-full',      '◈', 'The StoryKernel',      "EFC's complete nine-part strategic narrative. Start here if you're new to the brand."],
+                    ['mh-intro',     '◇', 'Messaging Hierarchy',  'Mission, vision, values, positioning, brand promise, and differentiators.'],
+                    ['cj-intro',     '◉', 'Customer Journey',     'Messaging mapped to every stage of the buying experience.'],
+                    ['app-research', '◇', 'Appendix',             'Research insights, competitive analysis, and relevant documents.'],
                 ].map(([id, icon, title, desc]) => (
-                    <button key={id} className="bg-base border border-light-gray rounded-xl p-4.5 text-left transition-all hover:border-primary hover:shadow-sm w-full font-sans" onClick={() => goPage(id)}>
-                        <div className="text-[22px] text-primary mb-2">{icon}</div>
+                    <button key={id} onClick={() => goPage(id)}
+                        className="bg-base border border-light-gray rounded-xl p-5 text-left transition-all hover:border-primary hover:shadow-sm w-full font-sans">
+                        <div className="text-[20px] text-primary mb-2.5">{icon}</div>
                         <div className="font-bold text-[14px] text-contrast mb-1">{title}</div>
                         <div className="text-[12px] text-ink-faint leading-[1.6]">{desc}</div>
                     </button>
                 ))}
             </div>
-            <div className="bg-base border border-light-gray rounded-xl flex flex-col h-[520px] overflow-hidden">
-                <div className="px-4.5 py-3.5 border-b border-light-gray flex items-center gap-2.5 bg-contrast rounded-t-xl">
-                    <div><div className="font-bold text-[14px] text-base">⚡ StoryEngine</div><div className="text-[10px] text-white/45 uppercase tracking-[0.08em] mt-px">EFC International · AI Assistant (Simulated)</div></div>
-                    {messages.length > 0 && <button onClick={() => { setMessages([]); localStorage.removeItem('wdn-efc-chat'); }} className="ml-auto bg-transparent border-none text-[#c0d8c0] text-xs cursor-pointer">Clear</button>}
+
+            {/* StoryEngine chat */}
+            <div className="bg-base border border-light-gray rounded-xl flex flex-col overflow-hidden" style={{height: 500}}>
+                {/* Chat header */}
+                <div className="px-5 py-3.5 border-b border-light-gray flex items-center gap-3 bg-contrast rounded-t-xl shrink-0">
+                    <div>
+                        <div className="font-bold text-[14px] text-base flex items-center gap-1.5">
+                            <span style={{color: '#f5c842'}}>⚡</span> StoryEngine
+                        </div>
+                        <div className="text-[10px] text-white/40 uppercase tracking-[0.08em] mt-0.5">
+                            EFC International · AI Assistant (Simulated)
+                        </div>
+                    </div>
+                    {messages.length > 0 && (
+                        <button onClick={() => { setMessages([]); localStorage.removeItem('wdn-efc-chat'); }}
+                            className="ml-auto bg-transparent border-none text-white/40 hover:text-white/70 text-xs cursor-pointer transition-colors">
+                            Clear
+                        </button>
+                    )}
                 </div>
-                <div className="flex-1 overflow-y-auto p-4.5 flex flex-col gap-2.5" ref={bodyRef}>
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-2.5" ref={bodyRef}>
                     {messages.length === 0 && (
                         <div>
-                            <div className="max-w-[85%] px-4 py-3 rounded-[18px] text-[14px] leading-[1.45] bg-super-light-gray text-contrast rounded-bl-sm mb-2.5">Hi! I'm StoryEngine, your AI assistant for navigating EFC's strategic narrative. I can help you explore your StoryGuide, generate brand-aligned content, or answer questions about your messaging. How can I help you today?</div>
-                            <div className="flex flex-col gap-1.5 mt-1.5">
-                                {window.WODEN.EFC_CHAT_SUGGESTIONS.map(s => <button key={s} className="text-left px-3 py-2 border border-light-gray rounded-[18px] bg-base font-sans text-[12px] cursor-pointer transition-colors text-ink-soft hover:bg-contrast hover:text-base hover:border-contrast" onClick={() => send(s)}>{s}</button>)}
+                            <div className="max-w-[85%] px-4 py-3 rounded-[18px] rounded-bl-sm text-[13px] leading-[1.55] bg-super-light-gray text-contrast mb-3">
+                                Hi! I'm StoryEngine, your AI assistant for navigating EFC's strategic narrative. I can help you explore your StoryGuide, generate brand-aligned content, or answer questions about your messaging. How can I help you today?
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                                {window.WODEN.EFC_CHAT_SUGGESTIONS.map(s => (
+                                    <button key={s} onClick={() => send(s)}
+                                        className="text-left px-3.5 py-2 border border-light-gray rounded-[18px] bg-base font-sans text-[12px] cursor-pointer transition-colors text-ink-soft hover:bg-contrast hover:text-base hover:border-contrast">
+                                        {s}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     )}
-                    {messages.map(m => <div key={m.id} className={`max-w-[85%] px-4 py-3 rounded-[18px] text-[14px] leading-[1.45] whitespace-pre-wrap ${m.role === 'user' ? 'self-end bg-primary text-white rounded-br-sm' : 'self-start bg-super-light-gray text-contrast rounded-bl-sm'}`}>{m.content}</div>)}
-                    {typing && <div className="max-w-[85%] px-4 py-3 rounded-[18px] self-start bg-super-light-gray text-contrast rounded-bl-sm inline-flex gap-1"><span className="w-[7px] h-[7px] rounded-full bg-gray animate-[bounce-dots_1s_infinite]"/><span className="w-[7px] h-[7px] rounded-full bg-gray animate-[bounce-dots_1s_infinite_0.15s]"/><span className="w-[7px] h-[7px] rounded-full bg-gray animate-[bounce-dots_1s_infinite_0.3s]"/></div>}
+                    {messages.map(m => (
+                        <div key={m.id}
+                            className={`max-w-[85%] px-4 py-3 rounded-[18px] text-[13px] leading-[1.55] whitespace-pre-wrap
+                                ${m.role === 'user'
+                                    ? 'self-end bg-primary text-white rounded-br-sm'
+                                    : 'self-start bg-super-light-gray text-contrast rounded-bl-sm'}`}>
+                            {m.content}
+                        </div>
+                    ))}
+                    {typing && (
+                        <div className="max-w-[85%] px-4 py-3 rounded-[18px] rounded-bl-sm self-start bg-super-light-gray text-contrast inline-flex gap-1">
+                            <span className="w-[7px] h-[7px] rounded-full bg-gray animate-[bounce-dots_1s_infinite]"/>
+                            <span className="w-[7px] h-[7px] rounded-full bg-gray animate-[bounce-dots_1s_infinite_0.15s]"/>
+                            <span className="w-[7px] h-[7px] rounded-full bg-gray animate-[bounce-dots_1s_infinite_0.3s]"/>
+                        </div>
+                    )}
                 </div>
-                <div className="px-4 py-3 border-t border-light-gray flex gap-2 items-end bg-base">
-                    <textarea rows={1} value={input} placeholder="Ask anything about your brand story..." onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} className="flex-1 resize-none min-h-[38px] max-h-[80px] px-3 py-2 border border-light-gray rounded-[18px] text-[13px] font-sans bg-super-light-gray outline-none focus:border-contrast focus:bg-base" />
-                    <button className="w-[38px] h-[38px] rounded-full bg-primary border-none text-base cursor-pointer text-[14px] shrink-0 flex items-center justify-center transition-colors hover:bg-primary-hover" onClick={() => send()}>➤</button>
+
+                {/* Input */}
+                <div className="px-4 py-3 border-t border-light-gray flex gap-2 items-end bg-base shrink-0">
+                    <textarea rows={1} value={input}
+                        placeholder="Ask anything about your brand story..."
+                        onChange={e => setInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+                        className="flex-1 resize-none min-h-[38px] max-h-[80px] px-3.5 py-2 border border-light-gray rounded-[18px] text-[13px] font-sans bg-super-light-gray outline-none focus:border-contrast focus:bg-base" />
+                    <button onClick={() => send()}
+                        className="w-[38px] h-[38px] rounded-full bg-primary border-none text-base cursor-pointer text-[14px] shrink-0 flex items-center justify-center transition-colors hover:bg-primary-hover">
+                        ➤
+                    </button>
                 </div>
             </div>
         </div>
