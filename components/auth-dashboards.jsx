@@ -13,7 +13,7 @@ function ManagerForm({ initial, onSave, onClose }) {
       <div className="flex flex-col gap-3.5">
         <Field label="Full name"><Input value={name} onChange={e => setName(e.target.value)} placeholder="Jane Smith" /></Field>
         <Field label="Email"><Input value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@woden.co" /></Field>
-        <div className="flex justify-end gap-2 mt-2">
+        <div className="flex flex-wrap justify-end gap-2 mt-2">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button variant="primary" onClick={save}>{initial ? 'Save changes' : 'Add manager'}</Button>
         </div>
@@ -36,7 +36,7 @@ function CompanyForm({ onSave, onClose }) {
             {window.WODEN.MANAGERS.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
           </Select>
         </Field>
-        <div className="flex justify-end gap-2 mt-2">
+        <div className="flex flex-wrap justify-end gap-2 mt-2">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button variant="primary" onClick={save}>Add client</Button>
         </div>
@@ -60,7 +60,7 @@ function ProjectForm({ companies, onSave, onClose }) {
             {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </Select>
         </Field>
-        <div className="flex justify-end gap-2 mt-2">
+        <div className="flex flex-wrap justify-end gap-2 mt-2">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button variant="primary" onClick={save}>Create project</Button>
         </div>
@@ -78,8 +78,8 @@ function Login({ setRole, nav }) {
     nav({ admin: '/admin', manager: '/manager', client: '/client', employee: '/employee/storyguide' }[r]);
   };
   return (
-      <div className="min-h-screen grid place-items-center p-10 bg-paper-warm animate-screen-in">
-        <Card className="w-[440px] p-10">
+      <div className="min-h-screen grid place-items-center p-4 sm:p-10 bg-paper-warm animate-screen-in">
+        <Card className="w-full max-w-[440px] p-6 sm:p-10">
           <div className="text-center mb-7">
             <img src="assets/woden-logo-black.svg" alt="Woden" className="h-9 mx-auto mb-2.5" />
             <div className="font-bold text-xs tracking-widest uppercase text-primary">Story is the strategy.</div>
@@ -99,7 +99,7 @@ function Login({ setRole, nav }) {
             <Button size="sm" onClick={() => go('client')}>Client</Button>
             <Button size="sm" onClick={() => go('employee')}>Employee</Button>
           </div>
-          <Note className="absolute -top-7 -right-20 rotate-6 text-center">any button works,<br/>it's a demo!</Note>
+          <Note className="hidden sm:block absolute -top-7 -right-20 rotate-6 text-center">any button works,<br/>it's a demo!</Note>
         </Card>
       </div>
   );
@@ -120,18 +120,18 @@ function AdminDash({ nav }) {
       <div className="animate-screen-in">
         {managerModal && <Modal title="New manager" onClose={() => setManagerModal(false)}><ManagerForm onSave={addManager} onClose={() => setManagerModal(false)} /></Modal>}
 
-        <div className="flex justify-between items-end mb-5">
+        <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-end mb-5">
           <div>
             <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">Admin overview</h1>
             <p className="text-ink-soft mt-1">Everything across Woden, in one place.</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <Button variant="ghost" size="sm">Export CSV</Button>
             <Button variant="primary" size="sm" onClick={() => setManagerModal(true)}>+ New manager</Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6">
           {[
             [String(allProjects.length), 'Active projects', '+2 this week'],
             [String(window.WODEN.CLIENT_COMPANIES.length), 'Client companies', '+1'],
@@ -152,7 +152,8 @@ function AdminDash({ nav }) {
               <h3 className="text-lg font-bold">Recent projects</h3>
               <span className="text-primary font-mono text-[11px] cursor-pointer hover:underline" onClick={() => nav('/admin/clients')}>VIEW ALL →</span>
             </div>
-            <table className="w-full text-left border-collapse">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left border-collapse">
               <thead>
               <tr>{['Client', 'Project', 'Manager', 'Status', 'Team', 'Updated'].map(h => <th key={h} className="py-4 px-5 border-b border-contrast font-bold text-[11px] uppercase tracking-widest text-ink-soft">{h}</th>)}</tr>
               </thead>
@@ -172,6 +173,7 @@ function AdminDash({ nav }) {
               })}
               </tbody>
             </table>
+            </div>
           </Card>
           <div className="flex flex-col gap-6">
             <Card>
@@ -214,12 +216,12 @@ function ManagerDash({ nav }) {
       <div className="animate-screen-in">
         {projectModal && <Modal title="New project" onClose={() => setProjectModal(false)}><ProjectForm companies={myCompanies} onSave={addProject} onClose={() => setProjectModal(false)} /></Modal>}
 
-        <div className="flex justify-between items-end mb-5">
+        <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-end mb-5">
           <div>
             <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">My projects</h1>
             <p className="text-ink-soft mt-1">Strategist workspace — {managerName}.</p>
           </div>
-          <Button variant="primary" onClick={() => setProjectModal(true)}>+ New project</Button>
+          <Button variant="primary" className="self-start md:self-auto" onClick={() => setProjectModal(true)}>+ New project</Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
@@ -249,7 +251,8 @@ function ManagerDash({ nav }) {
 
         <Card pad="p-0" className="overflow-hidden">
           <div className="p-5 border-b border-light-gray"><h3 className="text-lg font-bold">My clients</h3></div>
-          <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[480px] text-left border-collapse">
             <thead><tr>{['Client', 'Projects', ''].map(h => <th key={h} className="py-4 px-5 border-b border-contrast font-bold text-[11px] uppercase tracking-widest text-ink-soft">{h}</th>)}</tr></thead>
             <tbody>
             {myCompanies.map(c => {
@@ -264,6 +267,7 @@ function ManagerDash({ nav }) {
             })}
             </tbody>
           </table>
+          </div>
         </Card>
       </div>
   );
@@ -275,11 +279,11 @@ function ClientDash({ nav }) {
 
   return (
       <div className="animate-screen-in">
-        <Card pad="p-8" className="mb-7 bg-paper-warm">
+        <Card pad="p-5 sm:p-8" className="mb-7 bg-paper-warm">
           <div className="font-mono text-[11px] tracking-[0.15em] text-ink-faint">WELCOME BACK, ELENA</div>
-          <h1 className="text-4xl font-bold mt-2 mb-1.5">{u.company}</h1>
-          <p className="text-lg text-ink-soft m-0">"{window.WODEN.MERIDIAN.tagline}"</p>
-          <Note className="absolute -top-4 right-6 rotate-3">your projects</Note>
+          <h1 className="text-3xl sm:text-4xl font-bold mt-2 mb-1.5">{u.company}</h1>
+          <p className="text-base sm:text-lg text-ink-soft m-0">"{window.WODEN.MERIDIAN.tagline}"</p>
+          <Note className="hidden sm:block absolute -top-4 right-6 rotate-3">your projects</Note>
         </Card>
         <div className="flex justify-between items-baseline mb-4">
           <h2 className="text-2xl font-bold">Projects</h2>
@@ -307,9 +311,9 @@ function ClientDash({ nav }) {
 function EmployeeHome({ nav }) {
   return (
       <div className="animate-screen-in">
-        <Card pad="p-10" className="text-center">
+        <Card pad="p-6 sm:p-10" className="text-center">
           <div className="font-mono text-[11px] tracking-[0.15em] text-ink-faint">READ-ONLY ACCESS</div>
-          <h1 className="text-4xl font-bold mt-2.5">Meridian Coffee Co.</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mt-2.5">Meridian Coffee Co.</h1>
           <p className="text-ink-soft mb-5">Your company's StoryGuide + AI chat.</p>
           <Button variant="primary" size="lg" onClick={() => nav('/employee/storyguide')}>Open StoryGuide →</Button>
         </Card>
@@ -336,12 +340,13 @@ function ManagersTable() {
   return (
       <div className="animate-screen-in">
         {modal && <Modal title={modal === 'add' ? 'New manager' : 'Edit manager'} onClose={() => setModal(null)}><ManagerForm initial={modal === 'add' ? null : modal} onSave={saveManager} onClose={() => setModal(null)} /></Modal>}
-        <div className="flex justify-between items-end mb-5">
+        <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-end mb-5">
           <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">Managers</h1>
-          <Button variant="primary" onClick={() => setModal('add')}>+ Add manager</Button>
+          <Button variant="primary" className="self-start md:self-auto" onClick={() => setModal('add')}>+ Add manager</Button>
         </div>
         <Card pad="p-0" className="overflow-hidden">
-          <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-left border-collapse">
             <thead><tr>{['Name', 'Email', 'Clients', 'Projects', ''].map(h => <th key={h} className="py-4 px-5 border-b border-contrast font-bold text-[11px] uppercase tracking-widest text-ink-soft">{h}</th>)}</tr></thead>
             <tbody>
             {managers.map(m => (
@@ -355,6 +360,7 @@ function ManagersTable() {
             ))}
             </tbody>
           </table>
+          </div>
         </Card>
       </div>
   );
@@ -375,15 +381,16 @@ function ClientsTable({ nav }) {
         {clientModal && <Modal title="New client" onClose={() => setClientModal(false)}><CompanyForm onSave={addCompany} onClose={() => setClientModal(false)} /></Modal>}
         {projectModal && <Modal title="New project" onClose={() => setProjectModal(null)}><ProjectForm companies={window.WODEN.CLIENT_COMPANIES.filter(c => c.id === projectModal)} onSave={addProject} onClose={() => setProjectModal(null)} /></Modal>}
 
-        <div className="flex justify-between items-end mb-5">
+        <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-end mb-5">
           <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">Clients</h1>
-          <div className="flex gap-3">
-            <Input placeholder="Search clients..." className="w-56" />
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full md:w-auto">
+            <Input placeholder="Search clients..." className="w-full sm:w-56" />
             <Button variant="primary" onClick={() => setClientModal(true)}>+ New client</Button>
           </div>
         </div>
         <Card pad="p-0" className="overflow-hidden">
-          <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left border-collapse">
             <thead><tr>{['', 'Client', 'Manager', 'Projects', ''].map((h,i) => <th key={i} className={`py-4 px-5 border-b border-contrast font-bold text-[11px] uppercase tracking-widest text-ink-soft ${i===0?'w-8':''}`}>{h}</th>)}</tr></thead>
             <tbody>
             {companies.map(c => {
@@ -424,6 +431,7 @@ function ClientsTable({ nav }) {
             })}
             </tbody>
           </table>
+          </div>
         </Card>
       </div>
   );
@@ -433,7 +441,7 @@ function StatsPage() {
   return (
       <div className="animate-screen-in">
         <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight mb-5">Platform stats</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <Card>
             <h3 className="text-lg font-bold mb-3">Projects by month</h3>
             <div className="flex items-end gap-2 h-[180px] px-2">

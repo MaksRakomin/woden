@@ -9,8 +9,10 @@ function App() {
   const [tweaks, setTweaks] = useStateA(() => { try { return { ...DEFAULT_TWEAKS, ...JSON.parse(localStorage.getItem('wdn-tweaks') || '{}') }; } catch { return DEFAULT_TWEAKS; } });
   const [chatOpen, setChatOpen] = useStateA(false);
   const [sgSearch, setSgSearch] = useStateA('');
+  const [mobileNavOpen, setMobileNavOpen] = useStateA(false);
 
   useEffectA(() => { localStorage.setItem('wdn-tweaks', JSON.stringify(tweaks)); }, [tweaks]);
+  useEffectA(() => { setMobileNavOpen(false); }, [route]);
 
   if (!role || route === '/login') return <><Login setRole={setRole} nav={nav} /><ToastHost /></>;
 
@@ -38,10 +40,10 @@ function App() {
 
   return (
       <div className="flex min-h-screen bg-base text-contrast font-sans">
-        {role && !isSgRoute && <SideNav role={role} route={route} nav={nav} onLogout={() => { setRole(null); nav('/login'); }} />}
+        {role && !isSgRoute && <SideNav role={role} route={route} nav={nav} onLogout={() => { setRole(null); nav('/login'); }} mobileOpen={mobileNavOpen} setMobileOpen={setMobileNavOpen} />}
         <div className={`flex-1 flex flex-col min-w-0 ${isSgRoute ? 'h-screen overflow-hidden' : ''}`}>
-          {role && <SubBar route={route} role={role} search={isSgSearch ? sgSearch : null} onSearch={isSgSearch ? setSgSearch : null} />}
-          <main className={`flex-1 w-full max-w-[1400px] mx-auto ${isSgRoute ? 'p-0 max-w-none overflow-hidden' : 'p-10'}`}>
+          {role && <SubBar route={route} role={role} search={isSgSearch ? sgSearch : null} onSearch={isSgSearch ? setSgSearch : null} onMenuClick={!isSgRoute ? () => setMobileNavOpen(true) : null} />}
+          <main className={`flex-1 w-full max-w-[1400px] mx-auto ${isSgRoute ? 'p-0 max-w-none overflow-hidden' : 'p-4 md:p-10'}`}>
             {renderScreen()}
           </main>
         </div>
@@ -91,7 +93,7 @@ function NotFound({ nav }) {
 function Tweaks({ tweaks, set, onClose }) {
   const Opt = ({ k, v, label }) => <button className={`px-3 py-1.5 border border-contrast rounded-full font-bold text-[11px] uppercase tracking-widest transition-colors ${tweaks[k] === v ? 'bg-primary text-black border-primary' : 'bg-base text-contrast hover:bg-super-light-gray'}`} onClick={() => set(k, v)}>{label}</button>;
   return (
-      <div className="fixed top-[76px] right-6 w-[300px] bg-base border border-light-gray rounded-[24px] shadow-lg z-[90] max-h-[calc(100vh-120px)] overflow-y-auto">
+      <div className="fixed top-[76px] right-3 left-3 w-auto sm:left-auto sm:right-6 sm:w-[300px] bg-base border border-light-gray rounded-[24px] shadow-lg z-[90] max-h-[calc(100vh-120px)] overflow-y-auto">
         <h4 className="p-4 border-b border-light-gray bg-super-light-gray m-0 flex justify-between items-center rounded-t-[24px] font-bold text-sm uppercase tracking-wider">
           <span>Tweaks</span><Button variant="ghost" size="sm" className="px-2 py-1" onClick={onClose}>✕</Button>
         </h4>

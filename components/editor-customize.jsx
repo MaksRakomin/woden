@@ -28,7 +28,7 @@ function WYSIWYGEditor({ sectionN, title, content, onChange }) {
           <div className="w-px h-[22px] bg-light-gray mx-1.5 shrink-0" />
           <TBtn label="— List" title="Bullet list" action={() => insertAround('\n- ', '')} />
           <TBtn label="❞" title="Quote" action={() => insertAround('\n> ', '\n')} />
-          <div className="flex-1" />
+          <div className="flex-1 min-w-[20px]" />
           <span className="text-[11px] font-mono text-ink-faint px-2 py-1">{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
         </div>
         <textarea ref={ref} className="wysiwyg-textarea" value={content} placeholder={`Write the ${title} section here…`} onChange={e => onChange(e.target.value)} rows={12} />
@@ -61,7 +61,7 @@ function ProjectEditor({ nav, projectId }) {
         <div className="flex mb-2">
           <a className="font-mono text-ink-soft text-[11px] cursor-pointer hover:underline" onClick={() => flowStep === 2 ? setFlowStep(1) : nav('/manager/projects')}>← {flowStep === 2 ? 'BACK' : 'PROJECTS'}</a>
         </div>
-        <div className="flex justify-between items-start mb-6">
+        <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-start mb-6">
           <div>
             <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">Meridian Coffee Co.</h1>
             <div className="flex items-center mt-2.5">
@@ -70,7 +70,7 @@ function ProjectEditor({ nav, projectId }) {
               <div className={`flex items-center gap-2 text-[13px] font-medium ${flowStep >= 2 ? 'text-contrast' : 'text-ink-faint'}`}><span className={`w-[22px] h-[22px] rounded-full border-[1.5px] flex items-center justify-center text-[10px] font-bold font-mono transition-all ${flowStep >= 2 ? 'bg-contrast border-contrast text-base' : 'border-ink-faint'}`}>2</span><span>Brand</span></div>
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             {flowStep === 1 && <><Button variant="ghost" size="sm" onClick={() => toast('Draft saved')}>Save draft</Button><Button variant="primary" onClick={() => setFlowStep(2)}>Next step →</Button></>}
             {flowStep === 2 && <><Button variant="ghost" onClick={() => setFlowStep(1)}>← Back</Button><Button variant="primary" onClick={generate}>Generate project ✓</Button></>}
           </div>
@@ -79,10 +79,10 @@ function ProjectEditor({ nav, projectId }) {
         {flowStep === 1 && <Card pad="p-0" className="overflow-hidden flex flex-col"><WYSIWYGEditor title="StoryGuide" content={content} onChange={setContent} /></Card>}
         {flowStep === 2 && (
             <div className="flex flex-col gap-6 max-w-[720px]">
-              <Card pad="p-7">
+              <Card pad="p-5 sm:p-7">
                 <h3 className="text-lg font-bold mb-1">Brand palette</h3>
                 <p className="text-ink-soft text-[13px] mb-5">Choose the colour set that best fits this client's identity. You can refine it later.</p>
-                <div className="grid grid-cols-3 gap-3 p-1">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-1">
                   {PALETTES.map(p => (
                       <div key={p.id} className={`border-2 rounded-xl p-3 cursor-pointer transition-all outline outline-2 outline-offset-1 ${palette === p.id ? 'border-contrast outline-contrast bg-paper-warm' : 'border-light-gray outline-transparent hover:border-ink-faint'}`} onClick={() => setPalette(p.id)}>
                         <div className="flex rounded-md overflow-hidden mb-2.5">{p.colors.map((c, i) => <div key={i} className="flex-1 h-10" style={{background: c}} />)}</div>
@@ -91,7 +91,7 @@ function ProjectEditor({ nav, projectId }) {
                   ))}
                 </div>
               </Card>
-              <Card pad="p-7">
+              <Card pad="p-5 sm:p-7">
                 <h3 className="text-lg font-bold mb-1">Project description</h3>
                 <p className="text-ink-soft text-[13px] mb-3.5">A short note on what this StoryGuide is for. Used as the project name.</p>
                 <textarea className="w-full px-3.5 py-2.5 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus" rows={3} placeholder="e.g. Brand voice refresh ahead of Q3 launch…" value={description} onChange={e => setDescription(e.target.value)} />
@@ -146,11 +146,11 @@ function Team({ projectId }) {
   const add = () => { if (!inv.trim()) return; const updated = [...emails, inv.trim()]; if (project) project.team = updated; setEmails(updated); setInv(''); toast('Invite sent'); };
   return (
       <div className="animate-screen-in">
-        <div className="flex justify-between mb-1.5"><h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">Team</h1><Badge>{emails.length} members</Badge></div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start mb-1.5"><h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">Team</h1><div className="self-start"><Badge>{emails.length} members</Badge></div></div>
         {project && <p className="font-mono text-ink-soft text-[11px] tracking-[0.1em] mb-1.5">{project.name.toUpperCase()}</p>}
         <p className="text-ink-soft mb-6">Invite colleagues to access this project's StoryGuide.</p>
         <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6">
-          <Card><h3 className="text-lg font-bold mb-3">Members</h3><div className="flex flex-col gap-2">{emails.map((e, i) => (<div key={i} className="flex items-center gap-3 p-2.5 border-[1.5px] border-contrast rounded-lg"><div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">{e[0].toUpperCase()}</div><div className="flex-1"><div className="font-bold">{e.split('@')[0]}</div><div className="font-mono text-ink-soft text-[11px]">{e}</div></div><Badge>{i === 0 ? 'Active' : 'Invited'}</Badge><Button size="sm" variant="ghost" onClick={() => { const u = emails.filter((_, j) => j !== i); if (project) project.team = u; setEmails(u); toast('Removed'); }}>Remove</Button></div>))}</div></Card>
+          <Card><h3 className="text-lg font-bold mb-3">Members</h3><div className="flex flex-col gap-2">{emails.map((e, i) => (<div key={i} className="flex items-center gap-3 p-2.5 border-[1.5px] border-contrast rounded-lg flex-wrap sm:flex-nowrap"><div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">{e[0].toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-bold truncate">{e.split('@')[0]}</div><div className="font-mono text-ink-soft text-[11px] truncate">{e}</div></div><Badge>{i === 0 ? 'Active' : 'Invited'}</Badge><Button size="sm" variant="ghost" className="shrink-0" onClick={() => { const u = emails.filter((_, j) => j !== i); if (project) project.team = u; setEmails(u); toast('Removed'); }}>Remove</Button></div>))}</div></Card>
           <Card><h3 className="text-lg font-bold mb-3">Invite by email</h3><Input placeholder="name@company.co" value={inv} onChange={e => setInv(e.target.value)} className="mb-2.5" onKeyDown={e => e.key === 'Enter' && add()} /><Button variant="primary" className="w-full justify-center" onClick={add}>Send invite</Button><div className="my-6 border-t border-light-gray" /><Label>Role</Label><p className="text-ink-soft text-[13px] mt-1 m-0">Client Employee · read-only StoryGuide + chat.</p></Card>
         </div>
       </div>

@@ -28,24 +28,25 @@ function SgObjection({ q, a }) { return <div className="bg-base border border-li
 function StoryGuide({ readOnly, search = '', onSearchChange }) {
     const [page, setPage] = useSGState('home');
     const [openGroups, setOpenGroups] = useSGState({ sk: false, mh: false, cj: false, ng: false, app: false });
+    const [navOpen, setNavOpen] = useSGState(false);
     const mainRef = useSGRef(null);
     const EFC = window.WODEN.EFC;
 
-    function goPage(id) { setPage(id); const g = pageGroup(id); if (g) setOpenGroups(prev => ({ ...prev, [g]: true })); if (mainRef.current) mainRef.current.scrollTop = 0; }
+    function goPage(id) { setPage(id); const g = pageGroup(id); if (g) setOpenGroups(prev => ({ ...prev, [g]: true })); if (mainRef.current) mainRef.current.scrollTop = 0; setNavOpen(false); }
     function toggleGroup(gid) { setOpenGroups(prev => ({ ...prev, [gid]: !prev[gid] })); }
     useSGEffect(() => { const g = pageGroup(page); if (g) setOpenGroups(prev => ({ ...prev, [g]: true })); }, []);
+    useSGEffect(() => { const h = (e) => { if (e.key === 'Escape') setNavOpen(false); }; window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h); }, []);
 
     const searchLower = search.trim().toLowerCase();
     const matchesSearch = (label) => !searchLower || label.toLowerCase().includes(searchLower);
 
     return (
-        <div className="flex h-full min-h-0 bg-super-light-gray">
-            <aside className="w-[240px] shrink-0 bg-base border-r border-light-gray flex flex-col h-full overflow-hidden">
-                <div className="px-4 pt-4 pb-3 border-b border-light-gray shrink-0">
-                    <div className="text-[12px] font-bold text-contrast truncate mb-1">{EFC.client}</div>
-                    <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-contrast text-base rounded text-[9px] font-bold tracking-[0.12em] uppercase">
-                        <span style={{color: '#f5c842'}}>⚡</span> StoryEngine
-                    </div>
+        <div className="flex h-full min-h-0 bg-super-light-gray relative">
+            {navOpen && <div className="md:hidden fixed inset-0 bg-black/45 z-[140]" onClick={() => setNavOpen(false)} />}
+            <aside className={`bg-base border-r border-light-gray flex flex-col overflow-hidden md:static md:translate-x-0 md:w-[240px] md:shrink-0 md:h-full fixed top-0 bottom-0 left-0 w-[280px] z-[150] transition-transform duration-200 ${navOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+                <div className="px-4 pt-4 pb-3 border-b border-light-gray shrink-0 relative">
+                    <div className="text-[12px] font-bold text-contrast truncate mb-1 pr-8">{EFC.client}</div>
+                    <button onClick={() => setNavOpen(false)} className="md:hidden absolute top-3 right-3 w-7 h-7 flex items-center justify-center text-ink-soft hover:text-contrast" aria-label="Close sections">✕</button>
                 </div>
                 <nav className="flex-1 overflow-y-auto py-1.5">
                     {SG_NAV.map(entry => {
@@ -93,8 +94,14 @@ function StoryGuide({ readOnly, search = '', onSearchChange }) {
                     © 2025 Woden, Ltd. &amp; {EFC.client}
                 </div>
             </aside>
-            <main className="flex-1 overflow-y-auto" ref={mainRef}>
-                <div className="max-w-[1240px] mx-auto px-8 py-8">
+            <main className="flex-1 overflow-y-auto min-w-0" ref={mainRef}>
+                <div className="md:hidden sticky top-0 z-30 bg-base border-b border-light-gray flex items-center gap-3 px-4 py-2.5">
+                    <button onClick={() => setNavOpen(true)} className="w-9 h-9 flex items-center justify-center -ml-2 text-contrast hover:bg-super-light-gray rounded-lg" aria-label="Open sections">
+                        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+                    </button>
+                    <div className="text-[12px] font-bold uppercase tracking-wider text-contrast">Sections</div>
+                </div>
+                <div className="max-w-[1240px] mx-auto px-4 py-5 md:px-8 md:py-8">
                     <SGPage id={page} goPage={goPage} readOnly={readOnly} />
                 </div>
             </main>
@@ -155,7 +162,7 @@ function PageHome({ goPage }) {
     return (
         <div className="flex flex-col gap-5">
             {/* Hero */}
-            <div className="bg-contrast rounded-2xl px-8 py-7">
+            <div className="bg-contrast rounded-2xl px-5 py-6 sm:px-8 sm:py-7">
                 <div className="text-[10px] uppercase tracking-[0.14em] text-primary mb-2 font-bold">EFC International</div>
                 <div className="text-[26px] font-extrabold text-base mb-2.5 leading-[1.15]">Digital StoryGuide</div>
                 <div className="text-[13px] text-white/60 leading-[1.75] max-w-[480px]">
@@ -181,20 +188,20 @@ function PageHome({ goPage }) {
             </div>
 
             {/* StoryEngine chat */}
-            <div className="bg-base border border-light-gray rounded-xl flex flex-col overflow-hidden" style={{height: 500}}>
+            <div className="bg-base border border-light-gray rounded-xl flex flex-col overflow-hidden h-[70vh] sm:h-[500px]">
                 {/* Chat header */}
                 <div className="px-5 py-3.5 border-b border-light-gray flex items-center gap-3 bg-contrast rounded-t-xl shrink-0">
-                    <div>
-                        <div className="font-bold text-[14px] text-base flex items-center gap-1.5">
+                    <div className="min-w-0">
+                        <div className="font-bold text-[14px] text-base flex items-center gap-1.5 truncate">
                             <span style={{color: '#f5c842'}}>⚡</span> StoryEngine
                         </div>
-                        <div className="text-[10px] text-white/40 uppercase tracking-[0.08em] mt-0.5">
+                        <div className="text-[10px] text-white/40 uppercase tracking-[0.08em] mt-0.5 truncate">
                             EFC International · AI Assistant (Simulated)
                         </div>
                     </div>
                     {messages.length > 0 && (
                         <button onClick={() => { setMessages([]); localStorage.removeItem('wdn-efc-chat'); }}
-                            className="ml-auto bg-transparent border-none text-white/40 hover:text-white/70 text-xs cursor-pointer transition-colors">
+                            className="ml-auto shrink-0 bg-transparent border-none text-white/40 hover:text-white/70 text-xs cursor-pointer transition-colors">
                             Clear
                         </button>
                     )}
@@ -262,7 +269,7 @@ function PageSkIntro() {
             <SgSectionH>The Nine-Part Arc</SgSectionH>
             {arcs.map(a => (
                 <div key={a.n} className="border border-light-gray rounded-[10px] p-3.5 mb-2.5 bg-base">
-                    <div className="flex items-center gap-2 mb-1.5">
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                         <div className="w-[22px] h-[22px] rounded-full bg-contrast text-base text-[11px] font-bold flex items-center justify-center shrink-0">{a.n}</div>
                         <span className="font-bold text-[14px] text-contrast">{a.title}</span>
                         <span className="inline-block px-2 py-0.5 rounded-[5px] text-[10px] font-medium bg-primary-bg-subtle text-secondary ml-1">{a.stage}</span>
@@ -331,8 +338,8 @@ function PageIcpFull() {
             <SgBody>EFC's ICP takes the Hero of the StoryKernel off the page and into the real world — defining not just who this person is, but what their company looks like, what their role demands daily, and how to identify them in the market.</SgBody>
             <SgCallout>"Design-responsible contributors know intuitively that projects are more than their individual components."</SgCallout>
             <SgCard label="Who This Person Is">{icp.who.split('\n\n').map((p, i) => <SgBody key={i} className="!mb-2.5">{p}</SgBody>)}</SgCard>
-            <SgCard label="Their Company"><table className="w-full border-collapse text-[13px]"><tbody>{icp.company.map(r => <tr key={r.label}><td className="py-2 px-2.5 border-b border-light-gray font-semibold text-contrast w-[180px] align-top">{r.label}</td><td className="py-2 px-2.5 border-b border-light-gray text-ink-soft align-top">{r.value}</td></tr>)}</tbody></table></SgCard>
-            <SgCard label="How to Find Them"><table className="w-full border-collapse text-[13px]"><tbody>{icp.howToFind.map(r => <tr key={r.channel}><td className="py-2 px-2.5 border-b border-light-gray font-semibold text-contrast w-[180px] align-top">{r.channel}</td><td className="py-2 px-2.5 border-b border-light-gray text-ink-soft align-top">{r.detail}</td></tr>)}</tbody></table></SgCard>
+            <SgCard label="Their Company"><div className="overflow-x-auto -mx-2"><table className="w-full min-w-[460px] border-collapse text-[13px]"><tbody>{icp.company.map(r => <tr key={r.label}><td className="py-2 px-2.5 border-b border-light-gray font-semibold text-contrast w-[180px] align-top">{r.label}</td><td className="py-2 px-2.5 border-b border-light-gray text-ink-soft align-top">{r.value}</td></tr>)}</tbody></table></div></SgCard>
+            <SgCard label="How to Find Them"><div className="overflow-x-auto -mx-2"><table className="w-full min-w-[460px] border-collapse text-[13px]"><tbody>{icp.howToFind.map(r => <tr key={r.channel}><td className="py-2 px-2.5 border-b border-light-gray font-semibold text-contrast w-[180px] align-top">{r.channel}</td><td className="py-2 px-2.5 border-b border-light-gray text-ink-soft align-top">{r.detail}</td></tr>)}</tbody></table></div></SgCard>
             <SgCard label="Key Phrases from the StoryKernel">{icp.keyPhrases.map(p => <div key={p.phrase} className="border-b border-[#f0f0f0] py-2.5"><div className="font-semibold text-[13px] italic text-[#333] mb-0.5">"{p.phrase}"</div><div className="text-[12px] text-[#888]">{p.note}</div></div>)}</SgCard>
         </div>
     );
@@ -416,7 +423,7 @@ function PagePersonas() {
                 <div key={p.name} className="bg-base border border-light-gray rounded-xl p-5 mb-3.5">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-[46px] h-[46px] rounded-full bg-contrast text-base text-[18px] font-bold flex items-center justify-center shrink-0">{p.initial}</div>
-                        <div><div className="font-bold text-[15px] text-contrast">{p.name}</div><div className="text-[12px] text-ink-faint">{p.title} · {p.industry}</div></div>
+                        <div className="min-w-0"><div className="font-bold text-[15px] text-contrast truncate">{p.name}</div><div className="text-[12px] text-ink-faint truncate">{p.title} · {p.industry}</div></div>
                     </div>
                     <div className="text-[13px] text-ink-soft mb-1.5 leading-[1.5]"><strong className="text-contrast">Challenges:</strong> {p.challenges}</div>
                     <div className="text-[13px] text-ink-soft mb-1.5 leading-[1.5]"><strong className="text-contrast">Triggers:</strong> {p.triggers}</div>
