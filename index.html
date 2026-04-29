@@ -5,17 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Woden StoryGuide — Wireframes</title>
   <link rel="stylesheet" href="styles.css" />
-  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- React 18 -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#EA3323',
+            'primary-hover': '#ED5244',
+            secondary: '#981B10',
+            contrast: '#131215',
+            base: '#FFFFFF',
+            gray: '#BEBEBE',
+            'light-gray': '#EAEAEA',
+            'super-light-gray': '#F3F3F3',
+            'primary-bg-subtle': '#fbd6d3',
+            'ink-soft': '#4a4a4d',
+            'ink-faint': '#8a8a8d',
+            'paper-warm': '#F3F3F3',
+          },
+          fontFamily: {
+            sans: ['"GT Pressura"', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['ui-monospace', '"SF Mono"', 'Menlo', 'monospace'],
+          },
+          boxShadow: {
+            'sm': '0 2px 4px rgba(0,0,0,.06)',
+            'DEFAULT': '0 4px 20px rgba(0,0,0,.10)',
+            'lg': '0 16px 48px rgba(0,0,0,.12)',
+            'focus': '0 0 0 4px rgba(234,51,35,.25)',
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body>
-  <div id="root"></div>
-  <script src="data.js"></script>
-  <script type="text/babel" src="components/shell.jsx"></script>
-  <script type="text/babel" src="components/auth-dashboards.jsx"></script>
-  <script type="text/babel" src="components/editor-customize.jsx"></script>
-  <script type="text/babel" src="components/storyguide.jsx"></script>
-  <script type="text/babel" src="components/app.jsx"></script>
+<body class="bg-base text-contrast font-sans font-light antialiased selection:bg-primary selection:text-base">
+<div id="root"></div>
+<script src="data.js"></script>
+<script type="text/babel" src="components/shell.jsx"></script>
+<script type="text/babel" src="components/auth-dashboards.jsx"></script>
+<script type="text/babel" src="components/editor-customize.jsx"></script>
+<script type="text/babel" src="components/storyguide.jsx"></script>
+<script type="text/babel" src="components/app.jsx"></script>
 </body>
 </html>

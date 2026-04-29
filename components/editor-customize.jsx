@@ -1,70 +1,40 @@
-// Manager project editor + Customize + Team
 const { useState: useStateE, useRef: useRefE, useEffect: useEffectE } = React;
-
-// ─── WYSIWYG text editor ──────────────────────────────────────────────────────
 
 function WYSIWYGEditor({ sectionN, title, content, onChange }) {
   const ref = useRefE(null);
-
-  // auto-grow textarea height
-  useEffectE(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
-  }, [content]);
-
+  useEffectE(() => { const el = ref.current; if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }, [content]);
   const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
 
   const insertAround = (before, after) => {
-    const el = ref.current;
-    if (!el) return;
-    const start = el.selectionStart;
-    const end   = el.selectionEnd;
-    const sel   = content.slice(start, end) || 'text';
-    const next  = content.slice(0, start) + before + sel + after + content.slice(end);
-    onChange(next);
-    // restore cursor after React re-render
-    setTimeout(() => {
-      el.focus();
-      el.selectionStart = start + before.length;
-      el.selectionEnd   = start + before.length + sel.length;
-    }, 0);
+    const el = ref.current; if (!el) return;
+    const start = el.selectionStart, end = el.selectionEnd;
+    const sel = content.slice(start, end) || 'text';
+    onChange(content.slice(0, start) + before + sel + after + content.slice(end));
+    setTimeout(() => { el.focus(); el.selectionStart = start + before.length; el.selectionEnd = start + before.length + sel.length; }, 0);
   };
 
-  const TBtn = ({ label, title, cls, action }) => (
-    <button className={'wysiwyg-tbtn' + (cls ? ' ' + cls : '')} title={title} onMouseDown={e => { e.preventDefault(); action(); }}>
-      {label}
-    </button>
+  const TBtn = ({ label, title, cls='', action }) => (
+      <button className={`inline-flex items-center justify-center bg-base border-[1.5px] border-light-gray rounded-md px-2.5 py-1 cursor-pointer text-[13px] text-contrast transition-colors hover:border-contrast active:bg-paper-warm min-w-[28px] ${cls}`} title={title} onMouseDown={e => { e.preventDefault(); action(); }}>{label}</button>
   );
 
   return (
-    <div className="wysiwyg">
-      <div className="wysiwyg-toolbar">
-        <TBtn label="B"  cls="wysiwyg-tbtn-bold"   title="Bold"      action={() => insertAround('**', '**')} />
-        <TBtn label="I"  cls="wysiwyg-tbtn-italic" title="Italic"    action={() => insertAround('_', '_')} />
-        <div className="wysiwyg-divider" />
-        <TBtn label="H2" cls="wysiwyg-tbtn-mono"   title="Heading 2" action={() => insertAround('\n## ', '\n')} />
-        <TBtn label="H3" cls="wysiwyg-tbtn-mono"   title="Heading 3" action={() => insertAround('\n### ', '\n')} />
-        <div className="wysiwyg-divider" />
-        <TBtn label="&#8212; List" title="Bullet list" action={() => insertAround('\n- ', '')} />
-        <TBtn label="&#10077;&#10078;" title="Quote"   action={() => insertAround('\n> ', '\n')} />
-        <div style={{flex: 1}} />
-        <span className="wysiwyg-wordcount">{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
+      <div className="flex flex-col flex-1">
+        <div className="flex items-center gap-1 px-4 py-2.5 border-b-[1.5px] border-light-gray flex-wrap bg-paper-warm">
+          <TBtn label="B" cls="font-bold" title="Bold" action={() => insertAround('**', '**')} />
+          <TBtn label="I" cls="italic font-semibold" title="Italic" action={() => insertAround('_', '_')} />
+          <div className="w-px h-[22px] bg-light-gray mx-1.5 shrink-0" />
+          <TBtn label="H2" cls="font-mono text-[11px] tracking-wider" title="Heading 2" action={() => insertAround('\n## ', '\n')} />
+          <TBtn label="H3" cls="font-mono text-[11px] tracking-wider" title="Heading 3" action={() => insertAround('\n### ', '\n')} />
+          <div className="w-px h-[22px] bg-light-gray mx-1.5 shrink-0" />
+          <TBtn label="— List" title="Bullet list" action={() => insertAround('\n- ', '')} />
+          <TBtn label="❞" title="Quote" action={() => insertAround('\n> ', '\n')} />
+          <div className="flex-1" />
+          <span className="text-[11px] font-mono text-ink-faint px-2 py-1">{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
+        </div>
+        <textarea ref={ref} className="wysiwyg-textarea" value={content} placeholder={`Write the ${title} section here…`} onChange={e => onChange(e.target.value)} rows={12} />
       </div>
-      <textarea
-        ref={ref}
-        className="wysiwyg-textarea"
-        value={content}
-        placeholder={'Write the ' + title + ' section here…'}
-        onChange={e => onChange(e.target.value)}
-        rows={12}
-      />
-    </div>
   );
 }
-
-// ─── color palettes ───────────────────────────────────────────────────────────
 
 const PALETTES = [
   { id: 'espresso', name: 'Espresso',  colors: ['#3B2A1F', '#E8D5B7', '#D4572A', '#F7F1E5'] },
@@ -75,262 +45,115 @@ const PALETTES = [
   { id: 'minimal',  name: 'Minimal',   colors: ['#131215', '#EAEAEA', '#EA3323', '#FFFFFF'] },
 ];
 
-// ─── project editor ───────────────────────────────────────────────────────────
-
 function ProjectEditor({ nav, projectId }) {
-  const [flowStep, setFlowStep] = useStateE(1); // 1 = editor, 2 = colors + description
+  const [flowStep, setFlowStep] = useStateE(1);
   const [content, setContent] = useStateE('');
   const [palette, setPalette] = useStateE(PALETTES[0].id);
   const [description, setDescription] = useStateE('');
 
   const generate = () => {
-    const sel = PALETTES.find(p => p.id === palette);
-    const p = {
-      id: 'p' + Date.now(),
-      clientId: 'c1',
-      name: description.trim() || 'New StoryGuide',
-      status: 'draft',
-      sections: 0,
-      updated: 'just now',
-      team: [],
-      palette: sel ? sel.colors : [],
-    };
-    window.WODEN.PROJECTS.push(p);
-    toast('Project created');
-    nav('/manager/projects');
+    window.WODEN.PROJECTS.push({ id: 'p' + Date.now(), clientId: 'c1', name: description.trim() || 'New StoryGuide', status: 'draft', sections: 0, updated: 'just now', team: [], palette: PALETTES.find(p => p.id === palette)?.colors || [] });
+    toast('Project created'); nav('/manager/projects');
   };
 
   return (
-    <div className="screen">
-      <div className="row" style={{marginBottom: 8}}>
-        <a className="mono muted" style={{fontSize: 11, cursor: 'pointer'}} onClick={() => flowStep === 2 ? setFlowStep(1) : nav('/manager/projects')}>
-          &#8592; {flowStep === 2 ? 'BACK' : 'PROJECTS'}
-        </a>
-      </div>
-
-      {/* flow progress */}
-      <div className="row" style={{justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24}}>
-        <div>
-          <h1 className="scribble">Meridian Coffee Co.</h1>
-          <div className="flow-steps">
-            <div className={'flow-step' + (flowStep >= 1 ? ' active' : '')}>
-              <span className="flow-step-n">1</span>
-              <span>Content</span>
-            </div>
-            <div className="flow-step-line" />
-            <div className={'flow-step' + (flowStep >= 2 ? ' active' : '')}>
-              <span className="flow-step-n">2</span>
-              <span>Brand</span>
+      <div className="animate-screen-in">
+        <div className="flex mb-2">
+          <a className="font-mono text-ink-soft text-[11px] cursor-pointer hover:underline" onClick={() => flowStep === 2 ? setFlowStep(1) : nav('/manager/projects')}>← {flowStep === 2 ? 'BACK' : 'PROJECTS'}</a>
+        </div>
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">Meridian Coffee Co.</h1>
+            <div className="flex items-center mt-2.5">
+              <div className={`flex items-center gap-2 text-[13px] font-medium ${flowStep >= 1 ? 'text-contrast' : 'text-ink-faint'}`}><span className={`w-[22px] h-[22px] rounded-full border-[1.5px] flex items-center justify-center text-[10px] font-bold font-mono transition-all ${flowStep >= 1 ? 'bg-contrast border-contrast text-base' : 'border-ink-faint'}`}>1</span><span>Content</span></div>
+              <div className="w-8 h-[1.5px] bg-light-gray mx-2" />
+              <div className={`flex items-center gap-2 text-[13px] font-medium ${flowStep >= 2 ? 'text-contrast' : 'text-ink-faint'}`}><span className={`w-[22px] h-[22px] rounded-full border-[1.5px] flex items-center justify-center text-[10px] font-bold font-mono transition-all ${flowStep >= 2 ? 'bg-contrast border-contrast text-base' : 'border-ink-faint'}`}>2</span><span>Brand</span></div>
             </div>
           </div>
+          <div className="flex gap-3">
+            {flowStep === 1 && <><Button variant="ghost" size="sm" onClick={() => toast('Draft saved')}>Save draft</Button><Button variant="primary" onClick={() => setFlowStep(2)}>Next step →</Button></>}
+            {flowStep === 2 && <><Button variant="ghost" onClick={() => setFlowStep(1)}>← Back</Button><Button variant="primary" onClick={generate}>Generate project ✓</Button></>}
+          </div>
         </div>
-        <div className="row">
-          {flowStep === 1 && (
-            <>
-              <button className="wf-btn sm ghost" onClick={() => toast('Draft saved')}>Save draft</button>
-              <button className="wf-btn primary" onClick={() => setFlowStep(2)}>Next step &#8594;</button>
-            </>
-          )}
-          {flowStep === 2 && (
-            <>
-              <button className="wf-btn ghost" onClick={() => setFlowStep(1)}>&#8592; Back</button>
-              <button className="wf-btn primary" onClick={generate}>Generate project &#10003;</button>
-            </>
-          )}
-        </div>
-      </div>
 
-      {/* step 1 — editor */}
-      {flowStep === 1 && (
-        <div className="wf-box" style={{overflow: 'hidden', display: 'flex', flexDirection: 'column'}}>
-          <WYSIWYGEditor
-            title="StoryGuide"
-            content={content}
-            onChange={setContent}
-          />
-        </div>
-      )}
-
-      {/* step 2 — palette + description */}
-      {flowStep === 2 && (
-        <div className="col" style={{gap: 24, maxWidth: 720}}>
-          <Card pad={28}>
-            <h3 style={{marginBottom: 4}}>Brand palette</h3>
-            <p className="muted" style={{fontSize: 13, marginBottom: 20}}>Choose the colour set that best fits this client's identity. You can refine it later.</p>
-            <div className="palette-grid">
-              {PALETTES.map(p => (
-                <div
-                  key={p.id}
-                  className={'palette-card' + (palette === p.id ? ' selected' : '')}
-                  onClick={() => setPalette(p.id)}
-                >
-                  <div className="palette-swatches">
-                    {p.colors.map((c, i) => (
-                      <div key={i} className="palette-swatch" style={{background: c}} />
-                    ))}
-                  </div>
-                  <div className="palette-name">{p.name}</div>
+        {flowStep === 1 && <Card pad="p-0" className="overflow-hidden flex flex-col"><WYSIWYGEditor title="StoryGuide" content={content} onChange={setContent} /></Card>}
+        {flowStep === 2 && (
+            <div className="flex flex-col gap-6 max-w-[720px]">
+              <Card pad="p-7">
+                <h3 className="text-lg font-bold mb-1">Brand palette</h3>
+                <p className="text-ink-soft text-[13px] mb-5">Choose the colour set that best fits this client's identity. You can refine it later.</p>
+                <div className="grid grid-cols-3 gap-3 p-1">
+                  {PALETTES.map(p => (
+                      <div key={p.id} className={`border-2 rounded-xl p-3 cursor-pointer transition-all outline outline-2 outline-offset-1 ${palette === p.id ? 'border-contrast outline-contrast bg-paper-warm' : 'border-light-gray outline-transparent hover:border-ink-faint'}`} onClick={() => setPalette(p.id)}>
+                        <div className="flex rounded-md overflow-hidden mb-2.5">{p.colors.map((c, i) => <div key={i} className="flex-1 h-10" style={{background: c}} />)}</div>
+                        <div className={`text-xs text-contrast ${palette === p.id ? 'font-bold' : 'font-semibold'}`}>{p.name}</div>
+                      </div>
+                  ))}
                 </div>
-              ))}
+              </Card>
+              <Card pad="p-7">
+                <h3 className="text-lg font-bold mb-1">Project description</h3>
+                <p className="text-ink-soft text-[13px] mb-3.5">A short note on what this StoryGuide is for. Used as the project name.</p>
+                <textarea className="w-full px-3.5 py-2.5 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus" rows={3} placeholder="e.g. Brand voice refresh ahead of Q3 launch…" value={description} onChange={e => setDescription(e.target.value)} />
+              </Card>
             </div>
-          </Card>
-
-          <Card pad={28}>
-            <h3 style={{marginBottom: 4}}>Project description</h3>
-            <p className="muted" style={{fontSize: 13, marginBottom: 14}}>A short note on what this StoryGuide is for. Used as the project name.</p>
-            <textarea
-              className="wf-input"
-              rows={3}
-              placeholder="e.g. Brand voice refresh ahead of Q3 launch…"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-            />
-          </Card>
-
-        </div>
-      )}
-    </div>
+        )}
+      </div>
   );
 }
-
-/*
-function SectionForm({ step }) {
-  const fields = {
-    1: [['Client name','input','Meridian Coffee Co.'],['Tagline','input','Coffee with conviction.'],['Prepared by','input','Woden'],['Version','input','1.3'],['Logo','file','']],
-    2: [['Origin','textarea','In 2014, a barista named Ana…'],['Conflict','textarea','Three farmers. Seven middlemen…'],['Resolution','textarea','Meridian began as a single direct-trade relationship…']],
-    3: [['Mission','textarea','To connect growers and drinkers…'],['Vision','textarea','A coffee industry where every cup traces…']],
-    4: [['Persona 1 name','input','Conscious Casey'],['Persona 1 quote','input','I want to know where my money actually goes.'],['Persona 2 name','input','Office Owen'],['Persona 2 quote','input','I buy coffee for 50 people…']],
-    5: [['Positioning statement','textarea','For people who care where their coffee comes from…']],
-    6: [['Pillar 1','input','Transparent'],['Pillar 2','input','Rigorous'],['Pillar 3','input','Warm'],['Pillar 4','input','Curious']],
-  };
-  const f = fields[step] || [['Content','textarea','Fill this section…'],['Notes','textarea','']];
-  return (
-    <div className="col" style={{gap: 14}}>
-      {f.map(([label, kind, val], i) => (
-        <div key={i}>
-          <label className="wf-label">{label}</label>
-          {kind === 'input' && <input className="wf-input" defaultValue={val} />}
-          {kind === 'textarea' && <textarea className="wf-input" rows={3} defaultValue={val} />}
-          {kind === 'file' && <div className="wf-rect" style={{height: 80}}>Drop logo · SVG or PNG</div>}
-        </div>
-      ))}
-    </div>
-  );
-}
-*/
-
-// ─── customize ────────────────────────────────────────────────────────────────
 
 function Customize({ nav }) {
   const [theme, setTheme] = useStateE(() => localStorage.getItem('wdn-sg-theme') || 'light');
   const apply = (t) => { setTheme(t); localStorage.setItem('wdn-sg-theme', t); toast('Theme saved'); };
   return (
-    <div className="screen">
-      <h1 className="scribble" style={{marginBottom: 6}}>Customize</h1>
-      <p className="muted" style={{marginBottom: 24}}>Pick how your StoryGuide looks to your team.</p>
-      <div className="grid g-2" style={{marginBottom: 28}}>
-        <div className={'theme-card ' + (theme === 'light' ? 'selected' : '')} onClick={() => apply('light')}>
-          <div className="row" style={{justifyContent: 'space-between', marginBottom: 10}}>
-            <h3>Daylight</h3>
-            {theme === 'light' && <span className="wf-tag accent">Selected</span>}
-          </div>
-          <div className="theme-preview light">
-            <div style={{fontFamily: 'var(--hand-display)', fontSize: 20}}>Coffee with conviction.</div>
-            <div style={{height: 1, background: '#1a1a1a', opacity: 0.2}} />
-            <div style={{fontSize: 11, color: '#6a6a6a'}} className="mono">01 · STRATEGIC NARRATIVE</div>
-            <Lines n={3} />
-          </div>
-          <p className="muted" style={{fontSize: 13, marginTop: 10}}>White background, black text, red accents.</p>
-        </div>
-        <div className={'theme-card ' + (theme === 'night' ? 'selected' : '')} onClick={() => apply('night')}>
-          <div className="row" style={{justifyContent: 'space-between', marginBottom: 10}}>
-            <h3>Nightshift</h3>
-            {theme === 'night' && <span className="wf-tag accent">Selected</span>}
-          </div>
-          <div className="theme-preview night">
-            <div style={{fontFamily: 'var(--hand-display)', fontSize: 20, color: '#fff'}}>Coffee with conviction.</div>
-            <div style={{height: 1, background: '#fff', opacity: 0.2}} />
-            <div style={{fontSize: 11, color: '#bbb'}} className="mono">01 · STRATEGIC NARRATIVE</div>
-            <div className="wf-lines">
-              <div className="wf-line w90" style={{background: '#fff', opacity: 0.4}} />
-              <div className="wf-line w70" style={{background: '#fff', opacity: 0.4}} />
-              <div className="wf-line w80" style={{background: '#fff', opacity: 0.4}} />
+      <div className="animate-screen-in">
+        <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight mb-1.5">Customize</h1>
+        <p className="text-ink-soft mb-6">Pick how your StoryGuide looks to your team.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-7">
+          <Card pad="p-5" className={`cursor-pointer transition-all ${theme === 'light' ? 'border-primary shadow-[0_0_0_2px_#EA3323]' : 'hover:border-gray'}`} onClick={() => apply('light')}>
+            <div className="flex justify-between mb-2.5"><h3 className="text-lg font-bold">Daylight</h3>{theme === 'light' && <Badge variant="accent">Selected</Badge>}</div>
+            <div className="aspect-[4/3] rounded-lg p-4 flex flex-col gap-2.5 border border-light-gray bg-white text-contrast">
+              <div className="font-sans text-xl">Coffee with conviction.</div>
+              <div className="h-px bg-contrast opacity-20" />
+              <div className="text-[11px] text-ink-faint font-mono">01 · STRATEGIC NARRATIVE</div>
+              <Lines n={3} />
             </div>
-          </div>
-          <p className="muted" style={{fontSize: 13, marginTop: 10}}>Near-black background, white text, red accents.</p>
+            <p className="text-ink-soft text-[13px] mt-2.5">White background, black text, red accents.</p>
+          </Card>
+          <Card pad="p-5" className={`cursor-pointer transition-all ${theme === 'night' ? 'border-primary shadow-[0_0_0_2px_#EA3323]' : 'hover:border-gray'}`} onClick={() => apply('night')}>
+            <div className="flex justify-between mb-2.5"><h3 className="text-lg font-bold">Nightshift</h3>{theme === 'night' && <Badge variant="accent">Selected</Badge>}</div>
+            <div className="aspect-[4/3] rounded-lg p-4 flex flex-col gap-2.5 border border-[#2a2a2d] bg-contrast text-base">
+              <div className="font-sans text-xl text-white">Coffee with conviction.</div>
+              <div className="h-px bg-white opacity-20" />
+              <div className="text-[11px] text-[#bbb] font-mono">01 · STRATEGIC NARRATIVE</div>
+              <div className="flex flex-col gap-2"><div className="h-2.5 rounded w-[90%] bg-white opacity-40"/><div className="h-2.5 rounded w-[70%] bg-white opacity-40"/><div className="h-2.5 rounded w-[80%] bg-white opacity-40"/></div>
+            </div>
+            <p className="text-ink-soft text-[13px] mt-2.5">Near-black background, white text, red accents.</p>
+          </Card>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card><h3 className="text-lg font-bold mb-2.5">Logo</h3><Rect label="Drop logo · SVG/PNG · max 2MB" h={120} className="mb-3" /><label className="flex items-center gap-2 text-[13px]"><input type="checkbox" defaultChecked /> Use Meridian fallback wordmark</label></Card>
+          <Card><h3 className="text-lg font-bold mb-2.5">Live preview</h3><div className={`p-4 rounded-md ${theme === 'night' ? 'bg-[#131215] text-white' : ''}`}><div className="font-mono text-[10px] tracking-[0.12em] opacity-60">02 · STRATEGIC NARRATIVE</div><div className="font-sans text-[22px] mt-1.5 mb-3">Coffee with conviction.</div><Lines n={3} /></div></Card>
         </div>
       </div>
-      <div className="grid g-2">
-        <Card>
-          <h3 style={{marginBottom: 10}}>Logo</h3>
-          <div className="wf-rect" style={{height: 120, marginBottom: 12}}>Drop logo · SVG/PNG · max 2MB</div>
-          <label className="row" style={{fontSize: 13, gap: 8}}>
-            <input type="checkbox" defaultChecked /> Use Meridian fallback wordmark
-          </label>
-        </Card>
-        <Card>
-          <h3 style={{marginBottom: 10}}>Live preview</h3>
-          <div style={theme === 'night' ? {background: '#131215', color: '#fff', padding: 16, borderRadius: 6} : {}}>
-            <div className="mono" style={{fontSize: 10, letterSpacing: '0.12em', opacity: 0.6}}>02 · STRATEGIC NARRATIVE</div>
-            <div style={{fontFamily: 'var(--hand-display)', fontSize: 22, marginTop: 6}}>Coffee with conviction.</div>
-            <Lines n={3} />
-          </div>
-        </Card>
-      </div>
-    </div>
   );
 }
-
-// ─── team ─────────────────────────────────────────────────────────────────────
 
 function Team({ projectId }) {
   const project = window.WODEN.PROJECTS.find(p => p.id === projectId) || window.WODEN.PROJECTS[0];
   const [emails, setEmails] = useStateE(project ? [...project.team] : []);
   const [inv, setInv] = useStateE('');
-  const persist = (updated) => { if (project) project.team = updated; };
-  const add = () => {
-    if (!inv.trim()) return;
-    const updated = [...emails, inv.trim()];
-    persist(updated);
-    setEmails(updated);
-    setInv('');
-    toast('Invite sent');
-  };
+  const add = () => { if (!inv.trim()) return; const updated = [...emails, inv.trim()]; if (project) project.team = updated; setEmails(updated); setInv(''); toast('Invite sent'); };
   return (
-    <div className="screen">
-      <div className="row" style={{justifyContent: 'space-between', marginBottom: 6}}>
-        <h1 className="scribble">Team</h1>
-        <span className="wf-tag">{emails.length} members</span>
+      <div className="animate-screen-in">
+        <div className="flex justify-between mb-1.5"><h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">Team</h1><Badge>{emails.length} members</Badge></div>
+        {project && <p className="font-mono text-ink-soft text-[11px] tracking-[0.1em] mb-1.5">{project.name.toUpperCase()}</p>}
+        <p className="text-ink-soft mb-6">Invite colleagues to access this project's StoryGuide.</p>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6">
+          <Card><h3 className="text-lg font-bold mb-3">Members</h3><div className="flex flex-col gap-2">{emails.map((e, i) => (<div key={i} className="flex items-center gap-3 p-2.5 border-[1.5px] border-contrast rounded-lg"><div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">{e[0].toUpperCase()}</div><div className="flex-1"><div className="font-bold">{e.split('@')[0]}</div><div className="font-mono text-ink-soft text-[11px]">{e}</div></div><Badge>{i === 0 ? 'Active' : 'Invited'}</Badge><Button size="sm" variant="ghost" onClick={() => { const u = emails.filter((_, j) => j !== i); if (project) project.team = u; setEmails(u); toast('Removed'); }}>Remove</Button></div>))}</div></Card>
+          <Card><h3 className="text-lg font-bold mb-3">Invite by email</h3><Input placeholder="name@company.co" value={inv} onChange={e => setInv(e.target.value)} className="mb-2.5" onKeyDown={e => e.key === 'Enter' && add()} /><Button variant="primary" className="w-full justify-center" onClick={add}>Send invite</Button><div className="my-6 border-t border-light-gray" /><Label>Role</Label><p className="text-ink-soft text-[13px] mt-1 m-0">Client Employee · read-only StoryGuide + chat.</p></Card>
+        </div>
       </div>
-      {project && <p className="mono muted" style={{fontSize: 11, letterSpacing: '0.1em', marginBottom: 6}}>{project.name.toUpperCase()}</p>}
-      <p className="muted" style={{marginBottom: 24}}>Invite colleagues to access this project's StoryGuide.</p>
-      <div className="grid" style={{gridTemplateColumns: '1.3fr 1fr', gap: 24}}>
-        <Card>
-          <h3 style={{marginBottom: 12}}>Members</h3>
-          <div className="col" style={{gap: 8}}>
-            {emails.map((e, i) => (
-              <div key={i} className="row" style={{padding: '10px 12px', border: '1.5px solid var(--ink)', borderRadius: 6}}>
-                <div className="wf-circle" style={{width: 32, height: 32, fontSize: 12}}>{e[0].toUpperCase()}</div>
-                <div style={{flex: 1}}>
-                  <div style={{fontWeight: 700}}>{e.split('@')[0]}</div>
-                  <div className="mono muted" style={{fontSize: 11}}>{e}</div>
-                </div>
-                <span className="wf-tag">{i === 0 ? 'Active' : 'Invited'}</span>
-                <button className="wf-btn sm ghost" onClick={() => { const u = emails.filter((_, j) => j !== i); persist(u); setEmails(u); toast('Removed'); }}>Remove</button>
-              </div>
-            ))}
-          </div>
-        </Card>
-        <Card>
-          <h3 style={{marginBottom: 12}}>Invite by email</h3>
-          <input className="wf-input" placeholder="name@company.co" value={inv} onChange={e => setInv(e.target.value)} style={{marginBottom: 10}} onKeyDown={e => e.key === 'Enter' && add()} />
-          <button className="wf-btn primary" style={{width: '100%', justifyContent: 'center'}} onClick={add}>Send invite</button>
-          <div className="wf-hr" />
-          <div className="wf-label">Role</div>
-          <p className="muted" style={{fontSize: 13, margin: '4px 0 0'}}>Client Employee · read-only StoryGuide + chat.</p>
-        </Card>
-      </div>
-    </div>
   );
 }
 
