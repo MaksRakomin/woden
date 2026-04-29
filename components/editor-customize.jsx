@@ -45,33 +45,83 @@ const PALETTES = [
   { id: 'minimal',  name: 'Minimal',   colors: ['#131215', '#EAEAEA', '#EA3323', '#FFFFFF'] },
 ];
 
-function ProjectEditor({ nav, projectId }) {
-  const [flowStep, setFlowStep] = useStateE(1);
-  const [content, setContent] = useStateE('');
-  const [palette, setPalette] = useStateE(PALETTES[0].id);
-  const [description, setDescription] = useStateE('');
+function ProjectEditor({ nav, projectId, role = 'manager' }) {
+  const project = window.WODEN.PROJECTS.find(p => p.id === projectId);
+  const backRoute = role === 'admin' ? '/admin/projects' : '/manager/projects';
 
-  const generate = () => {
-    window.WODEN.PROJECTS.push({ id: 'p' + Date.now(), clientId: 'c1', name: description.trim() || 'New StoryGuide', status: 'draft', sections: 0, updated: 'just now', team: [], palette: PALETTES.find(p => p.id === palette)?.colors || [] });
-    toast('Project created'); nav('/manager/projects');
+  if (!project) {
+    return (
+        <div className="animate-screen-in text-center py-16">
+          <p className="text-ink-soft mb-4">Project not found.</p>
+          <Button variant="primary" onClick={() => nav(backRoute)}>Back to projects</Button>
+        </div>
+    );
+  }
+
+  const [flowStep, setFlowStep] = useStateE(1);
+  const [content, setContent] = useStateE(project.content || '');
+  const [palette, setPalette] = useStateE(() => {
+    if (Array.isArray(project.palette) && project.palette.length) {
+      const match = PALETTES.find(p => JSON.stringify(p.colors) === JSON.stringify(project.palette));
+      if (match) return match.id;
+    }
+    return PALETTES[0].id;
+  });
+  const [description, setDescription] = useStateE(project.description || '');
+  const [preprompt, setPreprompt] = useStateE(project.preprompt || '');
+  const [logo, setLogo] = useStateE(project.logo || null);
+  const fileRef = useRefE(null);
+
+  const cos = window.WODEN.getProjectClients(project);
+  const tpl = window.WODEN.getProjectTemplate(project);
+
+  const persist = () => {
+    project.content = content;
+    project.description = description;
+    project.preprompt = preprompt;
+    project.logo = logo;
+    project.palette = PALETTES.find(p => p.id === palette)?.colors || [];
+    project.updated = 'just now';
+  };
+
+  const saveDraft = () => { persist(); toast('Draft saved'); };
+  const generate = () => { persist(); project.status = 'review'; toast('Project generated ✓'); nav(backRoute); };
+
+  const onLogoFile = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) return toast('Logo must be under 2MB');
+    const reader = new FileReader();
+    reader.onload = () => setLogo(reader.result);
+    reader.readAsDataURL(file);
   };
 
   return (
       <div className="animate-screen-in">
         <div className="flex mb-2">
-          <a className="font-mono text-ink-soft text-[11px] cursor-pointer hover:underline" onClick={() => flowStep === 2 ? setFlowStep(1) : nav('/manager/projects')}>← {flowStep === 2 ? 'BACK' : 'PROJECTS'}</a>
+          <a className="font-mono text-ink-soft text-[11px] cursor-pointer hover:underline" onClick={() => flowStep === 2 ? setFlowStep(1) : nav(backRoute)}>← {flowStep === 2 ? 'BACK' : 'PROJECTS'}</a>
         </div>
         <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-start mb-6">
-          <div>
-            <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">Meridian Coffee Co.</h1>
-            <div className="flex items-center mt-2.5">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1.5">
+              {tpl && <Badge>{tpl.category}</Badge>}
+              <Badge variant={project.status === 'published' ? 'accent' : project.status === 'review' ? 'soft' : 'default'}>{project.status}</Badge>
+            </div>
+            <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">{project.name}</h1>
+            <div className="font-mono text-[11px] text-ink-soft mt-1.5 flex flex-wrap gap-1">
+              {cos.length > 0
+                  ? cos.map((c, i) => <span key={c.id} className="inline-block">{c.name}{i < cos.length - 1 ? ' ·' : ''}</span>)
+                  : <span className="text-ink-faint italic">no client linked</span>}
+            </div>
+            <div className="flex items-center mt-3">
               <div className={`flex items-center gap-2 text-[13px] font-medium ${flowStep >= 1 ? 'text-contrast' : 'text-ink-faint'}`}><span className={`w-[22px] h-[22px] rounded-full border-[1.5px] flex items-center justify-center text-[10px] font-bold font-mono transition-all ${flowStep >= 1 ? 'bg-contrast border-contrast text-base' : 'border-ink-faint'}`}>1</span><span>Content</span></div>
               <div className="w-8 h-[1.5px] bg-light-gray mx-2" />
               <div className={`flex items-center gap-2 text-[13px] font-medium ${flowStep >= 2 ? 'text-contrast' : 'text-ink-faint'}`}><span className={`w-[22px] h-[22px] rounded-full border-[1.5px] flex items-center justify-center text-[10px] font-bold font-mono transition-all ${flowStep >= 2 ? 'bg-contrast border-contrast text-base' : 'border-ink-faint'}`}>2</span><span>Brand</span></div>
             </div>
           </div>
           <div className="flex gap-3 flex-wrap">
-            {flowStep === 1 && <><Button variant="ghost" size="sm" onClick={() => toast('Draft saved')}>Save draft</Button><Button variant="primary" onClick={() => setFlowStep(2)}>Next step →</Button></>}
+            <Button variant="ghost" size="sm" onClick={() => { persist(); nav('/preview/' + project.id); }}>Preview</Button>
+            {flowStep === 1 && <><Button variant="ghost" size="sm" onClick={saveDraft}>Save draft</Button><Button variant="primary" onClick={() => { persist(); setFlowStep(2); }}>Next step →</Button></>}
             {flowStep === 2 && <><Button variant="ghost" onClick={() => setFlowStep(1)}>← Back</Button><Button variant="primary" onClick={generate}>Generate project ✓</Button></>}
           </div>
         </div>
@@ -79,6 +129,12 @@ function ProjectEditor({ nav, projectId }) {
         {flowStep === 1 && <Card pad="p-0" className="overflow-hidden flex flex-col"><WYSIWYGEditor title="StoryGuide" content={content} onChange={setContent} /></Card>}
         {flowStep === 2 && (
             <div className="flex flex-col gap-6 max-w-[720px]">
+              <Card pad="p-5 sm:p-7">
+                <h3 className="text-lg font-bold mb-1">Project description</h3>
+                <p className="text-ink-soft text-[13px] mb-3.5">A short note on what this StoryGuide is for.</p>
+                <textarea className="w-full px-3.5 py-2.5 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus" rows={3} placeholder="e.g. Brand voice refresh ahead of Q3 launch…" value={description} onChange={e => setDescription(e.target.value)} />
+              </Card>
+
               <Card pad="p-5 sm:p-7">
                 <h3 className="text-lg font-bold mb-1">Brand palette</h3>
                 <p className="text-ink-soft text-[13px] mb-5">Choose the colour set that best fits this client's identity. You can refine it later.</p>
@@ -91,10 +147,25 @@ function ProjectEditor({ nav, projectId }) {
                   ))}
                 </div>
               </Card>
+
               <Card pad="p-5 sm:p-7">
-                <h3 className="text-lg font-bold mb-1">Project description</h3>
-                <p className="text-ink-soft text-[13px] mb-3.5">A short note on what this StoryGuide is for. Used as the project name.</p>
-                <textarea className="w-full px-3.5 py-2.5 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus" rows={3} placeholder="e.g. Brand voice refresh ahead of Q3 launch…" value={description} onChange={e => setDescription(e.target.value)} />
+                <h3 className="text-lg font-bold mb-1">Logo</h3>
+                <p className="text-ink-soft text-[13px] mb-3.5">SVG / PNG / JPG, up to 2MB. Used in StoryGuide previews and exports.</p>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <div className="w-20 h-20 rounded-xl border border-light-gray bg-paper-warm flex items-center justify-center overflow-hidden shrink-0">
+                    {logo ? <img src={logo} alt="Logo preview" className="max-w-full max-h-full object-contain" /> : <span className="text-ink-faint font-mono text-[10px] uppercase">No logo</span>}
+                  </div>
+                  <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onLogoFile} />
+                  <Button size="sm" variant="ghost" onClick={() => fileRef.current && fileRef.current.click()}>{logo ? 'Replace' : 'Upload logo'}</Button>
+                  {logo && <Button size="sm" variant="ghost" onClick={() => setLogo(null)}>Remove</Button>}
+                </div>
+              </Card>
+
+              <Card pad="p-5 sm:p-7">
+                <h3 className="text-lg font-bold mb-1">Pre-prompt</h3>
+                <p className="text-ink-soft text-[13px] mb-3.5">Extra instructions appended to the base StoryGuide generation prompt. Use to capture company-specific tone, audience, or constraints. The base prompt is defined on the server.</p>
+                <textarea className="w-full px-3.5 py-2.5 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus font-mono" rows={5} placeholder={"e.g. The brand serves enterprise SaaS buyers in regulated industries. Avoid casual tone. Emphasise compliance, audit trails, predictability."} value={preprompt} onChange={e => setPreprompt(e.target.value)} />
+                <div className="font-mono text-[10px] text-ink-faint mt-1.5">{preprompt.length} chars</div>
               </Card>
             </div>
         )}

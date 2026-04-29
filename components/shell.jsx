@@ -134,6 +134,8 @@ const NAV_ICONS = {
   dashboard: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>,
   managers:  <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.2 3.4-5 6.5-5s5.7 1.8 6.5 5"/><circle cx="17" cy="6" r="2.5"/><path d="M15 11.5c2.4 0 4.5 1.3 5.5 3.5"/></svg>,
   clients:   <svg viewBox="0 0 24 24"><path d="M3 20v-2a6 6 0 0 1 6-6h6a6 6 0 0 1 6 6v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  projects:  <svg viewBox="0 0 24 24"><path d="M3 7l3-3h5l2 2h8v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z"/><path d="M3 11h18"/></svg>,
+  templates: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>,
   stats:     <svg viewBox="0 0 24 24"><path d="M3 20h18"/><rect x="5" y="11" width="3" height="8"/><rect x="11" y="6" width="3" height="13"/><rect x="17" y="14" width="3" height="5"/></svg>,
   home:      <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>,
   storyguide:<svg viewBox="0 0 24 24"><path d="M4 4h10a4 4 0 0 1 4 4v12"/><path d="M4 4v14a2 2 0 0 0 2 2h12"/><path d="M8 9h6M8 13h6"/></svg>,
@@ -145,8 +147,8 @@ function SideNav({ role, route, nav, onLogout, mobileOpen, setMobileOpen }) {
   const user = role ? window.WODEN.MOCK_USERS[role] : null;
   const roleLabels = { admin: 'Super-admin', manager: 'Strategist', client: 'Client admin', employee: 'Employee' };
   const navs = {
-    admin: [{ section: 'Operations' }, ['/admin', 'Dashboard', 'dashboard'], ['/admin/managers', 'Managers', 'managers'], ['/admin/clients', 'Clients', 'clients'], ['/admin/stats', 'Stats', 'stats']],
-    manager: [{ section: 'Work' }, ['/manager', 'Dashboard', 'dashboard'], ['/manager/clients', 'Clients', 'clients']],
+    admin: [{ section: 'Operations' }, ['/admin', 'Dashboard', 'dashboard'], ['/admin/managers', 'Managers', 'managers'], ['/admin/clients', 'Clients', 'clients'], ['/admin/projects', 'Projects', 'projects'], ['/admin/templates', 'Templates', 'templates'], ['/admin/stats', 'Stats', 'stats']],
+    manager: [{ section: 'Work' }, ['/manager', 'Dashboard', 'dashboard'], ['/manager/projects', 'Projects', 'projects'], ['/manager/clients', 'Clients', 'clients']],
     client: [{ section: 'Your workspace' }, ['/client', 'Home', 'home'], ['/client/customize', 'Customize', 'customize'], ['/client/settings', 'Settings', 'settings']],
     employee: [{ section: 'Brand' }, ['/employee/storyguide', 'StoryGuide', 'storyguide']],
   };

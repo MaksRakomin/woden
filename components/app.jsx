@@ -20,10 +20,13 @@ function App() {
     if (route === '/admin') return <AdminDash nav={nav} />;
     if (route === '/admin/managers') return <ManagersTable />;
     if (route === '/admin/clients') return <ClientsTable nav={nav} />;
-    if (route.startsWith('/admin/projects/')) return <ProjectEditor nav={nav} projectId={route.split('/')[3]} />;
+    if (route === '/admin/projects') return <AllProjectsTable nav={nav} role="admin" />;
+    if (route === '/admin/templates') return <TemplatesPage />;
+    if (route.startsWith('/admin/projects/')) return <ProjectEditor nav={nav} projectId={route.split('/')[3]} role="admin" />;
     if (route === '/admin/stats') return <StatsPage />;
-    if (route === '/manager' || route === '/manager/projects') return <ManagerDash nav={nav} />;
-    if (route.startsWith('/manager/projects/')) return <ProjectEditor nav={nav} projectId={route.split('/')[3]} />;
+    if (route === '/manager') return <ManagerDash nav={nav} />;
+    if (route === '/manager/projects') return <AllProjectsTable nav={nav} role="manager" />;
+    if (route.startsWith('/manager/projects/')) return <ProjectEditor nav={nav} projectId={route.split('/')[3]} role="manager" />;
     if (route === '/manager/clients') return <ClientsTable nav={nav} />;
     if (route === '/client') return <ClientDash nav={nav} />;
     if (route === '/client/storyguide' || route.startsWith('/client/projects/')) return <StoryGuide search={sgSearch} onSearchChange={setSgSearch} />;
@@ -32,10 +35,11 @@ function App() {
     if (route === '/client/team') return <Team projectId={null} />;
     if (route === '/client/settings') return <ClientSettings />;
     if (route === '/employee' || route === '/employee/storyguide') return <StoryGuide readOnly search={sgSearch} onSearchChange={setSgSearch} />;
+    if (route.startsWith('/preview/')) return <StoryGuide readOnly search={sgSearch} onSearchChange={setSgSearch} />;
     return <NotFound nav={nav} />;
   };
 
-  const isSgRoute = route === '/client/storyguide' || route === '/employee/storyguide' || route === '/employee';
+  const isSgRoute = route === '/client/storyguide' || route === '/employee/storyguide' || route === '/employee' || route.startsWith('/preview/');
   const isSgSearch = isSgRoute || route.includes('storyguide');
 
   return (

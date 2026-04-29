@@ -15,16 +15,23 @@ const CLIENT_COMPANIES = [
   { id: 'c6', name: 'Bridgeport Foods',     manager: 'Jonah Okafor' },
 ];
 
+const TEMPLATES = [
+  { id: 't-it',            name: 'IT Company',            category: 'it',            description: 'Tech, SaaS, dev tooling. Emphasis on product narrative and technical credibility.' },
+  { id: 't-management',    name: 'Management Consulting', category: 'management',    description: 'Advisory and consulting firms. Emphasis on outcomes, frameworks, and trust.' },
+  { id: 't-manufacturing', name: 'Manufacturing',         category: 'manufacturing', description: 'Industrial, B2B, supply chain. Emphasis on operational expertise and reliability.' },
+  { id: 't-consumer',      name: 'Consumer Brand',        category: 'consumer',      description: 'Direct-to-consumer, lifestyle. Emphasis on values, identity, and emotional connection.' },
+];
+
 const PROJECTS = [
-  { id: 'p1', clientId: 'c1', name: 'Brand Strategy 2024',  status: 'published', sections: 14, updated: '2 days ago', team: ['elena@meridian.co', 'david@meridian.co', 'rachel@meridian.co'] },
-  { id: 'p2', clientId: 'c1', name: 'Product Launch',       status: 'draft',     sections: 6,  updated: '1 day ago',  team: ['elena@meridian.co'] },
-  { id: 'p3', clientId: 'c2', name: 'Northwind Rebrand',    status: 'draft',     sections: 3,  updated: '5 days ago', team: [] },
-  { id: 'p4', clientId: 'c3', name: 'Kestrel Identity',     status: 'published', sections: 14, updated: '1 wk ago',   team: ['james@kestrel.co', 'anna@kestrel.co'] },
-  { id: 'p5', clientId: 'c3', name: 'Kestrel Messaging',    status: 'review',    sections: 10, updated: '3 days ago', team: ['james@kestrel.co'] },
-  { id: 'p6', clientId: 'c4', name: 'Forgeworks Brand',     status: 'draft',     sections: 3,  updated: '3 days ago', team: [] },
-  { id: 'p7', clientId: 'c5', name: 'Luma Brand Voice',     status: 'review',    sections: 7,  updated: 'yesterday',  team: [] },
-  { id: 'p8', clientId: 'c6', name: 'Bridgeport Rebrand',   status: 'published', sections: 14, updated: '2 wk ago',   team: ['tom@bridgeport.co', 'sarah@bridgeport.co', 'mike@bridgeport.co'] },
-  { id: 'p9', clientId: 'c6', name: 'Bridgeport Digital',   status: 'draft',     sections: 4,  updated: '1 wk ago',   team: ['tom@bridgeport.co'] },
+  { id: 'p1', clientIds: ['c1'],       managerIds: ['m1'],      templateId: 't-consumer',      name: 'Brand Strategy 2024',  status: 'published', sections: 14, updated: '2 days ago', team: ['elena@meridian.co', 'david@meridian.co', 'rachel@meridian.co'], description: '', preprompt: '', logo: null },
+  { id: 'p2', clientIds: ['c1'],       managerIds: ['m1'],      templateId: 't-consumer',      name: 'Product Launch',       status: 'draft',     sections: 6,  updated: '1 day ago',  team: ['elena@meridian.co'],                                              description: '', preprompt: '', logo: null },
+  { id: 'p3', clientIds: ['c2'],       managerIds: ['m1'],      templateId: 't-manufacturing', name: 'Northwind Rebrand',    status: 'draft',     sections: 3,  updated: '5 days ago', team: [],                                                                  description: '', preprompt: '', logo: null },
+  { id: 'p4', clientIds: ['c3'],       managerIds: ['m2'],      templateId: 't-management',    name: 'Kestrel Identity',     status: 'published', sections: 14, updated: '1 wk ago',   team: ['james@kestrel.co', 'anna@kestrel.co'],                             description: '', preprompt: '', logo: null },
+  { id: 'p5', clientIds: ['c3'],       managerIds: ['m2'],      templateId: 't-management',    name: 'Kestrel Messaging',    status: 'review',    sections: 10, updated: '3 days ago', team: ['james@kestrel.co'],                                                description: '', preprompt: '', logo: null },
+  { id: 'p6', clientIds: ['c4'],       managerIds: ['m2'],      templateId: 't-it',            name: 'Forgeworks Brand',     status: 'draft',     sections: 3,  updated: '3 days ago', team: [],                                                                  description: '', preprompt: '', logo: null },
+  { id: 'p7', clientIds: ['c5'],       managerIds: ['m3'],      templateId: 't-management',    name: 'Luma Brand Voice',     status: 'review',    sections: 7,  updated: 'yesterday',  team: [],                                                                  description: '', preprompt: '', logo: null },
+  { id: 'p8', clientIds: ['c6', 'c5'], managerIds: ['m3', 'm1'],templateId: 't-consumer',      name: 'Bridgeport Rebrand',   status: 'published', sections: 14, updated: '2 wk ago',   team: ['tom@bridgeport.co', 'sarah@bridgeport.co', 'mike@bridgeport.co'], description: '', preprompt: '', logo: null },
+  { id: 'p9', clientIds: ['c6'],       managerIds: ['m3'],      templateId: 't-it',            name: 'Bridgeport Digital',   status: 'draft',     sections: 4,  updated: '1 wk ago',   team: ['tom@bridgeport.co'],                                              description: '', preprompt: '', logo: null },
 ];
 
 const MANAGERS = [
@@ -32,6 +39,21 @@ const MANAGERS = [
   { id: 'm2', name: 'Priya Shah',   email: 'priya@woden.co',   clients: 2, projects: 3 },
   { id: 'm3', name: 'Jonah Okafor', email: 'jonah@woden.co',   clients: 2, projects: 3 },
 ];
+
+function getProjectClients(p) {
+  if (!p) return [];
+  const ids = p.clientIds || (p.clientId ? [p.clientId] : []);
+  return ids.map(id => CLIENT_COMPANIES.find(c => c.id === id)).filter(Boolean);
+}
+function getProjectManagers(p) {
+  if (!p) return [];
+  const ids = p.managerIds || [];
+  return ids.map(id => MANAGERS.find(m => m.id === id)).filter(Boolean);
+}
+function getProjectTemplate(p) {
+  if (!p || !p.templateId) return null;
+  return TEMPLATES.find(t => t.id === p.templateId) || null;
+}
 
 const SECTION_TITLES = [
   'Cover', 'Strategic Narrative', 'Mission & Vision', 'Target Audience',
@@ -404,7 +426,8 @@ function mockEFCChatReply(q) {
 }
 
 window.WODEN = {
-  MOCK_USERS, CLIENT_COMPANIES, PROJECTS, MANAGERS, SECTION_TITLES, MERIDIAN,
+  MOCK_USERS, CLIENT_COMPANIES, PROJECTS, MANAGERS, TEMPLATES, SECTION_TITLES, MERIDIAN,
   CHAT_SUGGESTIONS, mockChatReply,
   EFC, EFC_CHAT_SUGGESTIONS, mockEFCChatReply,
+  getProjectClients, getProjectManagers, getProjectTemplate,
 };
