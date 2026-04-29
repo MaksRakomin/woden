@@ -45,9 +45,46 @@ const PALETTES = [
   { id: 'minimal',  name: 'Minimal',   colors: ['#131215', '#EAEAEA', '#EA3323', '#FFFFFF'] },
 ];
 
+function aiAutofillFromContent({ content, project, template }) {
+  const text = (content || '').toLowerCase();
+  const words = (content || '').trim().split(/\s+/).filter(Boolean);
+  const wordCount = words.length;
+
+  const firstSentence = (content || '').match(/[^.!?\n]+[.!?]/);
+  const description = firstSentence
+      ? firstSentence[0].trim().slice(0, 220)
+      : (wordCount > 0 ? words.slice(0, 24).join(' ') + (wordCount > 24 ? '…' : '') : `${project.name} — strategic narrative draft.`);
+
+  const cat = template?.category || '';
+  let paletteId = cat === 'it' ? 'slate'
+      : cat === 'manufacturing' ? 'clay'
+      : cat === 'management' ? 'minimal'
+      : cat === 'consumer' ? 'espresso'
+      : 'forest';
+  if (/forest|green|sustain|nature|organic/.test(text)) paletteId = 'forest';
+  if (/luxury|premium|craft|night|elegant/.test(text)) paletteId = 'dusk';
+  if (/coffee|food|warm|artisan|hand/.test(text)) paletteId = 'espresso';
+  if (/tech|saas|platform|software|api|cloud/.test(text)) paletteId = 'slate';
+  if (/industrial|factory|manufactur|machin/.test(text)) paletteId = 'clay';
+
+  const promptHints = [];
+  if (/saas|platform|software|api|cloud|developer/.test(text)) promptHints.push('Audience: technical buyers in software organisations. Avoid marketing fluff. Lean on plain-spoken precision.');
+  if (/enterprise|compliance|audit|governance|regulat/.test(text)) promptHints.push('Emphasise governance, audit trails, and predictability. Buyer is risk-aware.');
+  if (/coffee|food|consumer|lifestyle|community/.test(text)) promptHints.push('Audience: everyday consumers. Use warm, approachable language; lean on values and identity.');
+  if (/industrial|manufactur|operations|supply chain|fasten|connector/.test(text)) promptHints.push('Audience: operations leaders. Emphasise precision, reliability, and total operational perspective.');
+  if (/sustain|carbon|green|ethical/.test(text)) promptHints.push('Sustainability is a load-bearing theme — surface it without greenwashing.');
+  if (promptHints.length === 0) promptHints.push(`Tone: confident, plain-spoken. Audience inferred from a ${wordCount}-word brief.`);
+  if (template) promptHints.push(`Template context — ${template.name}: ${template.description}`);
+  const preprompt = promptHints.join('\n\n');
+
+  return { description, paletteId, preprompt };
+}
+
 function ProjectEditor({ nav, projectId, role = 'manager' }) {
   const project = window.WODEN.PROJECTS.find(p => p.id === projectId);
-  const backRoute = role === 'admin' ? '/admin/projects' : '/manager/projects';
+  const backRoute = role === 'admin' ? '/admin/projects'
+      : role === 'client' ? '/client'
+      : '/manager/projects';
 
   if (!project) {
     return (
@@ -57,6 +94,9 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
         </div>
     );
   }
+
+  const isClient = role === 'client';
+  const lastStep = isClient ? 3 : 2;
 
   const [flowStep, setFlowStep] = useStateE(1);
   const [content, setContent] = useStateE(project.content || '');
@@ -70,6 +110,9 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
   const [description, setDescription] = useStateE(project.description || '');
   const [preprompt, setPreprompt] = useStateE(project.preprompt || '');
   const [logo, setLogo] = useStateE(project.logo || null);
+  const [team, setTeam] = useStateE(Array.isArray(project.team) ? [...project.team] : []);
+  const [inviteEmail, setInviteEmail] = useStateE('');
+  const [aiBusy, setAiBusy] = useStateE(false);
   const fileRef = useRefE(null);
 
   const cos = window.WODEN.getProjectClients(project);
@@ -81,6 +124,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
     project.preprompt = preprompt;
     project.logo = logo;
     project.palette = PALETTES.find(p => p.id === palette)?.colors || [];
+    project.team = team;
     project.updated = 'just now';
   };
 
@@ -96,10 +140,48 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
     reader.readAsDataURL(file);
   };
 
+  const runAiAutofill = () => {
+    if (aiBusy) return;
+    setAiBusy(true);
+    setTimeout(() => {
+      const out = aiAutofillFromContent({ content, project, template: tpl });
+      setDescription(out.description);
+      if (PALETTES.find(p => p.id === out.paletteId)) setPalette(out.paletteId);
+      setPreprompt(out.preprompt);
+      setAiBusy(false);
+      toast('Auto-filled from project content ✨');
+    }, 600 + Math.random() * 500);
+  };
+
+  const addTeamMember = () => {
+    const v = inviteEmail.trim().toLowerCase();
+    if (!v) return;
+    if (!/.+@.+\..+/.test(v)) return toast('Enter a valid email');
+    if (team.includes(v)) return toast('Already on the team');
+    const updated = [...team, v];
+    setTeam(updated); project.team = updated; project.updated = 'just now';
+    setInviteEmail('');
+    toast('Member added');
+  };
+  const removeTeamMember = (em) => {
+    const updated = team.filter(t => t !== em);
+    setTeam(updated); project.team = updated; project.updated = 'just now';
+    toast('Member removed');
+  };
+
+  const goStep = (n) => { persist(); setFlowStep(n); };
+
+  const StepBtn = ({ n, label }) => (
+      <button type="button" onClick={() => goStep(n)} className={`group flex items-center gap-2 text-[13px] font-medium rounded-full pr-2 pl-1 py-0.5 transition-colors hover:bg-super-light-gray ${flowStep >= n ? 'text-contrast' : 'text-ink-faint'}`} aria-label={`Go to step ${n}`}>
+        <span className={`w-[22px] h-[22px] rounded-full border-[1.5px] flex items-center justify-center text-[10px] font-bold font-mono transition-all ${flowStep >= n ? 'bg-contrast border-contrast text-base' : 'border-ink-faint'}`}>{n}</span>
+        <span className={flowStep === n ? 'underline underline-offset-4 decoration-2' : ''}>{label}</span>
+      </button>
+  );
+
   return (
       <div className="animate-screen-in">
         <div className="flex mb-2">
-          <a className="font-mono text-ink-soft text-[11px] cursor-pointer hover:underline" onClick={() => flowStep === 2 ? setFlowStep(1) : nav(backRoute)}>← {flowStep === 2 ? 'BACK' : 'PROJECTS'}</a>
+          <a className="font-mono text-ink-soft text-[11px] cursor-pointer hover:underline" onClick={() => flowStep > 1 ? goStep(flowStep - 1) : nav(backRoute)}>← {flowStep > 1 ? 'BACK' : 'PROJECTS'}</a>
         </div>
         <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-start mb-6">
           <div className="min-w-0">
@@ -113,22 +195,50 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
                   ? cos.map((c, i) => <span key={c.id} className="inline-block">{c.name}{i < cos.length - 1 ? ' ·' : ''}</span>)
                   : <span className="text-ink-faint italic">no client linked</span>}
             </div>
-            <div className="flex items-center mt-3">
-              <div className={`flex items-center gap-2 text-[13px] font-medium ${flowStep >= 1 ? 'text-contrast' : 'text-ink-faint'}`}><span className={`w-[22px] h-[22px] rounded-full border-[1.5px] flex items-center justify-center text-[10px] font-bold font-mono transition-all ${flowStep >= 1 ? 'bg-contrast border-contrast text-base' : 'border-ink-faint'}`}>1</span><span>Content</span></div>
+            <div className="flex items-center mt-3 flex-wrap gap-y-2">
+              <StepBtn n={1} label="Content" />
               <div className="w-8 h-[1.5px] bg-light-gray mx-2" />
-              <div className={`flex items-center gap-2 text-[13px] font-medium ${flowStep >= 2 ? 'text-contrast' : 'text-ink-faint'}`}><span className={`w-[22px] h-[22px] rounded-full border-[1.5px] flex items-center justify-center text-[10px] font-bold font-mono transition-all ${flowStep >= 2 ? 'bg-contrast border-contrast text-base' : 'border-ink-faint'}`}>2</span><span>Brand</span></div>
+              <StepBtn n={2} label="Brand" />
+              {isClient && <>
+                <div className="w-8 h-[1.5px] bg-light-gray mx-2" />
+                <StepBtn n={3} label="Team" />
+              </>}
             </div>
           </div>
           <div className="flex gap-3 flex-wrap">
             <Button variant="ghost" size="sm" onClick={() => { persist(); nav('/preview/' + project.id); }}>Preview</Button>
-            {flowStep === 1 && <><Button variant="ghost" size="sm" onClick={saveDraft}>Save draft</Button><Button variant="primary" onClick={() => { persist(); setFlowStep(2); }}>Next step →</Button></>}
-            {flowStep === 2 && <><Button variant="ghost" onClick={() => setFlowStep(1)}>← Back</Button><Button variant="primary" onClick={generate}>Generate project ✓</Button></>}
+            {flowStep === 1 && <><Button variant="ghost" size="sm" onClick={saveDraft}>Save draft</Button><Button variant="primary" onClick={() => goStep(2)}>Next step →</Button></>}
+            {flowStep === 2 && <>
+              <Button variant="ghost" onClick={() => goStep(1)}>← Back</Button>
+              {isClient
+                  ? <Button variant="primary" onClick={() => goStep(3)}>Next step →</Button>
+                  : <Button variant="primary" onClick={generate}>Generate project ✓</Button>}
+            </>}
+            {flowStep === 3 && <>
+              <Button variant="ghost" onClick={() => goStep(2)}>← Back</Button>
+              <Button variant="primary" onClick={generate}>Generate project ✓</Button>
+            </>}
           </div>
         </div>
 
         {flowStep === 1 && <Card pad="p-0" className="overflow-hidden flex flex-col"><WYSIWYGEditor title="StoryGuide" content={content} onChange={setContent} /></Card>}
         {flowStep === 2 && (
             <div className="flex flex-col gap-6 max-w-[720px]">
+              <Card pad="p-5 sm:p-6" className="bg-paper-warm border-primary/30">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-bold mb-0.5 flex items-center gap-2"><span aria-hidden>✨</span>Auto-fill with AI</h3>
+                    <p className="text-ink-soft text-[12.5px] leading-snug m-0">Generate description, palette, and pre-prompt from your Step 1 content. You can edit the result.</p>
+                  </div>
+                  <Button variant="primary" size="sm" onClick={runAiAutofill} className={aiBusy ? 'opacity-70 pointer-events-none' : ''}>
+                    {aiBusy
+                        ? <><span className="inline-flex gap-1 items-center"><span className="w-1.5 h-1.5 rounded-full bg-current animate-[bounce-dots_1s_infinite]"/><span className="w-1.5 h-1.5 rounded-full bg-current animate-[bounce-dots_1s_infinite_0.15s]"/><span className="w-1.5 h-1.5 rounded-full bg-current animate-[bounce-dots_1s_infinite_0.3s]"/></span>Thinking</>
+                        : <>Auto-fill ✨</>}
+                  </Button>
+                </div>
+                {!content.trim() && <p className="font-mono text-[10px] text-ink-faint mt-2.5">Step 1 is empty — fill in some content first for richer suggestions.</p>}
+              </Card>
+
               <Card pad="p-5 sm:p-7">
                 <h3 className="text-lg font-bold mb-1">Project description</h3>
                 <p className="text-ink-soft text-[13px] mb-3.5">A short note on what this StoryGuide is for.</p>
@@ -169,43 +279,51 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
               </Card>
             </div>
         )}
-      </div>
-  );
-}
 
-function Customize({ nav }) {
-  const [theme, setTheme] = useStateE(() => localStorage.getItem('wdn-sg-theme') || 'light');
-  const apply = (t) => { setTheme(t); localStorage.setItem('wdn-sg-theme', t); toast('Theme saved'); };
-  return (
-      <div className="animate-screen-in">
-        <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight mb-1.5">Customize</h1>
-        <p className="text-ink-soft mb-6">Pick how your StoryGuide looks to your team.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-7">
-          <Card pad="p-5" className={`cursor-pointer transition-all ${theme === 'light' ? 'border-primary shadow-[0_0_0_2px_#EA3323]' : 'hover:border-gray'}`} onClick={() => apply('light')}>
-            <div className="flex justify-between mb-2.5"><h3 className="text-lg font-bold">Daylight</h3>{theme === 'light' && <Badge variant="accent">Selected</Badge>}</div>
-            <div className="aspect-[4/3] rounded-lg p-4 flex flex-col gap-2.5 border border-light-gray bg-white text-contrast">
-              <div className="font-sans text-xl">Coffee with conviction.</div>
-              <div className="h-px bg-contrast opacity-20" />
-              <div className="text-[11px] text-ink-faint font-mono">01 · STRATEGIC NARRATIVE</div>
-              <Lines n={3} />
+        {flowStep === 3 && isClient && (
+            <div className="flex flex-col gap-6 max-w-[860px]">
+              <Card pad="p-5 sm:p-7">
+                <div className="flex justify-between items-start gap-3 flex-wrap mb-3">
+                  <div>
+                    <h3 className="text-lg font-bold mb-1">Assign employees</h3>
+                    <p className="text-ink-soft text-[13px] m-0">Add colleagues from your company who should be able to preview this StoryGuide. They'll see it as read-only.</p>
+                  </div>
+                  <Badge>{team.length} member{team.length === 1 ? '' : 's'}</Badge>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-5">
+                  <Input placeholder="name@company.co" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTeamMember()} className="flex-1" />
+                  <Button variant="primary" onClick={addTeamMember}>Add to project</Button>
+                </div>
+
+                {team.length === 0 ? (
+                    <div className="text-center py-8 border border-dashed border-light-gray rounded-lg">
+                      <p className="text-ink-faint font-mono text-[11px] uppercase tracking-wider mb-1">No employees yet</p>
+                      <p className="text-ink-soft text-[13px] m-0">Add an email above to assign your first team member.</p>
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-2">
+                      {team.map((em, i) => (
+                          <div key={em} className="flex items-center gap-3 p-2.5 border border-light-gray rounded-lg flex-wrap sm:flex-nowrap hover:border-contrast transition-colors">
+                            <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">{em[0].toUpperCase()}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-bold truncate">{em.split('@')[0]}</div>
+                              <div className="font-mono text-ink-soft text-[11px] truncate">{em}</div>
+                            </div>
+                            <Badge>{i === 0 ? 'Active' : 'Invited'}</Badge>
+                            <Button size="sm" variant="ghost" className="shrink-0" onClick={() => removeTeamMember(em)}>Remove</Button>
+                          </div>
+                      ))}
+                    </div>
+                )}
+              </Card>
+
+              <Card pad="p-5 sm:p-6" className="bg-paper-warm">
+                <div className="font-bold text-[10px] uppercase tracking-widest text-ink-soft mb-2">Role · Client Employee</div>
+                <p className="text-ink-soft text-[13px] m-0">Employees see this project on their Home page with a single Preview button. They can read the StoryGuide but cannot edit content, brand, or team.</p>
+              </Card>
             </div>
-            <p className="text-ink-soft text-[13px] mt-2.5">White background, black text, red accents.</p>
-          </Card>
-          <Card pad="p-5" className={`cursor-pointer transition-all ${theme === 'night' ? 'border-primary shadow-[0_0_0_2px_#EA3323]' : 'hover:border-gray'}`} onClick={() => apply('night')}>
-            <div className="flex justify-between mb-2.5"><h3 className="text-lg font-bold">Nightshift</h3>{theme === 'night' && <Badge variant="accent">Selected</Badge>}</div>
-            <div className="aspect-[4/3] rounded-lg p-4 flex flex-col gap-2.5 border border-[#2a2a2d] bg-contrast text-base">
-              <div className="font-sans text-xl text-white">Coffee with conviction.</div>
-              <div className="h-px bg-white opacity-20" />
-              <div className="text-[11px] text-[#bbb] font-mono">01 · STRATEGIC NARRATIVE</div>
-              <div className="flex flex-col gap-2"><div className="h-2.5 rounded w-[90%] bg-white opacity-40"/><div className="h-2.5 rounded w-[70%] bg-white opacity-40"/><div className="h-2.5 rounded w-[80%] bg-white opacity-40"/></div>
-            </div>
-            <p className="text-ink-soft text-[13px] mt-2.5">Near-black background, white text, red accents.</p>
-          </Card>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card><h3 className="text-lg font-bold mb-2.5">Logo</h3><Rect label="Drop logo · SVG/PNG · max 2MB" h={120} className="mb-3" /><label className="flex items-center gap-2 text-[13px]"><input type="checkbox" defaultChecked /> Use Meridian fallback wordmark</label></Card>
-          <Card><h3 className="text-lg font-bold mb-2.5">Live preview</h3><div className={`p-4 rounded-md ${theme === 'night' ? 'bg-[#131215] text-white' : ''}`}><div className="font-mono text-[10px] tracking-[0.12em] opacity-60">02 · STRATEGIC NARRATIVE</div><div className="font-sans text-[22px] mt-1.5 mb-3">Coffee with conviction.</div><Lines n={3} /></div></Card>
-        </div>
+        )}
       </div>
   );
 }
@@ -228,4 +346,4 @@ function Team({ projectId }) {
   );
 }
 
-Object.assign(window, { ProjectEditor, Customize, Team });
+Object.assign(window, { ProjectEditor, Team });

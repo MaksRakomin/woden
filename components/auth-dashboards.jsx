@@ -164,7 +164,7 @@ function Login({ setRole, nav }) {
   const [pwd, setPwd] = useStateL('••••••••');
   const go = (r) => {
     setRole(r);
-    nav({ admin: '/admin', manager: '/manager', client: '/client', employee: '/employee/storyguide' }[r]);
+    nav({ admin: '/admin', manager: '/manager', client: '/client', employee: '/employee' }[r]);
   };
   return (
       <div className="min-h-screen grid place-items-center p-4 sm:p-10 bg-paper-warm animate-screen-in">
@@ -398,9 +398,8 @@ function ClientDash({ nav }) {
                 </div>
                 <h3 className="text-xl font-bold mb-4">{p.name}</h3>
                 <div className="flex gap-2 flex-wrap">
-                  <Button size="sm" variant="primary" onClick={e => { e.stopPropagation(); nav('/client/projects/' + p.id); }}>Open StoryGuide →</Button>
                   <Button size="sm" onClick={e => { e.stopPropagation(); nav('/preview/' + p.id); }}>Preview</Button>
-                  <Button size="sm" variant="ghost" onClick={e => { e.stopPropagation(); nav('/client/team/' + p.id); }}>Team</Button>
+                  <Button size="sm" variant="ghost" onClick={e => { e.stopPropagation(); nav('/client/projects/' + p.id + '/edit'); }}>Edit</Button>
                 </div>
               </Card>
           ))}
@@ -410,14 +409,86 @@ function ClientDash({ nav }) {
 }
 
 function EmployeeHome({ nav }) {
+  const u = window.WODEN.MOCK_USERS.employee;
+  const myEmail = u.email;
+  const projects = window.WODEN.PROJECTS.filter(p => (p.team || []).includes(myEmail));
+
   return (
       <div className="animate-screen-in">
-        <Card pad="p-6 sm:p-10" className="text-center">
-          <div className="font-mono text-[11px] tracking-[0.15em] text-ink-faint">READ-ONLY ACCESS</div>
-          <h1 className="text-3xl sm:text-4xl font-bold mt-2.5">Meridian Coffee Co.</h1>
-          <p className="text-ink-soft mb-5">Your company's StoryGuide + AI chat.</p>
-          <Button variant="primary" size="lg" onClick={() => nav('/employee/storyguide')}>Open StoryGuide →</Button>
+        <Card pad="p-5 sm:p-8" className="mb-7 bg-paper-warm">
+          <div className="font-mono text-[11px] tracking-[0.15em] text-ink-faint">READ-ONLY ACCESS · {u.name.toUpperCase()}</div>
+          <h1 className="text-3xl sm:text-4xl font-bold mt-2 mb-1.5">{u.company}</h1>
+          <p className="text-base sm:text-lg text-ink-soft m-0">Projects you've been assigned to.</p>
         </Card>
+        <div className="flex justify-between items-baseline mb-4">
+          <h2 className="text-2xl font-bold">Projects</h2>
+          <span className="font-mono text-xs text-ink-faint">{projects.length} assigned</span>
+        </div>
+        {projects.length === 0 ? (
+            <Card pad="p-8" className="text-center">
+              <p className="text-ink-soft mb-1">No projects assigned to you yet.</p>
+              <p className="font-mono text-[11px] text-ink-faint">Ask your client admin to add you to a project's Team.</p>
+            </Card>
+        ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {projects.map(p => {
+                const cos = window.WODEN.getProjectClients(p);
+                const tpl = window.WODEN.getProjectTemplate(p);
+                return (
+                    <Card key={p.id} pad="p-5">
+                      <div className="flex justify-between mb-2.5 flex-wrap gap-2">
+                        <Badge variant={p.status === 'published' ? 'accent' : p.status === 'review' ? 'soft' : 'default'}>{p.status}</Badge>
+                        {tpl && <span className="font-mono text-[10px] text-ink-faint uppercase self-center">{tpl.category}</span>}
+                      </div>
+                      <div className="font-mono text-[11px] text-ink-faint mb-1 truncate">{cos.map(c => c.name).join(' · ') || '—'}</div>
+                      <h3 className="text-xl font-bold mb-4">{p.name}</h3>
+                      <Button size="sm" variant="primary" onClick={() => nav('/preview/' + p.id)}>Preview →</Button>
+                    </Card>
+                );
+              })}
+            </div>
+        )}
+      </div>
+  );
+}
+
+function EmployeeSettings() {
+  const u = window.WODEN.MOCK_USERS.employee;
+  const [current, setCurrent] = useStateL('');
+  const [next, setNext] = useStateL('');
+  const [confirm, setConfirm] = useStateL('');
+
+  const submit = () => {
+    if (!current.trim()) return toast('Enter current password');
+    if (next.length < 6) return toast('New password must be 6+ chars');
+    if (next !== confirm) return toast("Passwords don't match");
+    setCurrent(''); setNext(''); setConfirm('');
+    toast('Password updated');
+  };
+
+  return (
+      <div className="animate-screen-in">
+        <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight mb-5">Settings</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <h3 className="text-lg font-bold mb-3">Profile</h3>
+            <div className="flex flex-col gap-3">
+              <Field label="Name"><Input defaultValue={u.name} disabled /></Field>
+              <Field label="Email"><Input defaultValue={u.email} disabled /></Field>
+              <Field label="Company"><Input defaultValue={u.company} disabled /></Field>
+              <p className="font-mono text-[10px] text-ink-faint">Profile fields are managed by your client admin.</p>
+            </div>
+          </Card>
+          <Card>
+            <h3 className="text-lg font-bold mb-3">Change password</h3>
+            <div className="flex flex-col gap-3">
+              <Field label="Current password"><Input type="password" value={current} onChange={e => setCurrent(e.target.value)} /></Field>
+              <Field label="New password"><Input type="password" value={next} onChange={e => setNext(e.target.value)} placeholder="6+ characters" /></Field>
+              <Field label="Confirm new password"><Input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} /></Field>
+              <Button variant="primary" className="self-start mt-1" onClick={submit}>Update password</Button>
+            </div>
+          </Card>
+        </div>
       </div>
   );
 }
@@ -722,4 +793,4 @@ function StatsPage() {
   );
 }
 
-Object.assign(window, { Login, AdminDash, ManagerDash, ClientDash, EmployeeHome, ManagersTable, ClientsTable, AllProjectsTable, TemplatesPage, StatsPage, NewProjectModal });
+Object.assign(window, { Login, AdminDash, ManagerDash, ClientDash, EmployeeHome, EmployeeSettings, ManagersTable, ClientsTable, AllProjectsTable, TemplatesPage, StatsPage, NewProjectModal });

@@ -149,8 +149,8 @@ function SideNav({ role, route, nav, onLogout, mobileOpen, setMobileOpen }) {
   const navs = {
     admin: [{ section: 'Operations' }, ['/admin', 'Dashboard', 'dashboard'], ['/admin/managers', 'Managers', 'managers'], ['/admin/clients', 'Clients', 'clients'], ['/admin/projects', 'Projects', 'projects'], ['/admin/templates', 'Templates', 'templates'], ['/admin/stats', 'Stats', 'stats']],
     manager: [{ section: 'Work' }, ['/manager', 'Dashboard', 'dashboard'], ['/manager/projects', 'Projects', 'projects'], ['/manager/clients', 'Clients', 'clients']],
-    client: [{ section: 'Your workspace' }, ['/client', 'Home', 'home'], ['/client/customize', 'Customize', 'customize'], ['/client/settings', 'Settings', 'settings']],
-    employee: [{ section: 'Brand' }, ['/employee/storyguide', 'StoryGuide', 'storyguide']],
+    client: [{ section: 'Your workspace' }, ['/client', 'Home', 'home'], ['/client/settings', 'Settings', 'settings']],
+    employee: [{ section: 'Your workspace' }, ['/employee', 'Home', 'home'], ['/employee/settings', 'Settings', 'settings']],
   };
   const items = (role && navs[role]) || [];
 
@@ -168,7 +168,7 @@ function SideNav({ role, route, nav, onLogout, mobileOpen, setMobileOpen }) {
         {mobileOpen && <div className="md:hidden fixed inset-0 bg-black/45 z-[140]" onClick={closeMobile} />}
         <aside className={`bg-base border-r border-light-gray flex flex-col h-screen overflow-hidden md:sticky md:top-0 md:translate-x-0 md:w-[248px] md:shrink-0 md:z-20 fixed top-0 bottom-0 left-0 w-[280px] z-[150] transition-transform duration-200 ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
           <div className="p-5 border-b border-light-gray flex items-center gap-2 relative">
-            <a href="#/" onClick={(e)=>{ e.preventDefault(); nav(role ? ({admin:'/admin',manager:'/manager',client:'/client',employee:'/employee/storyguide'})[role] : '/login'); closeMobile(); }} className="font-extrabold text-2xl tracking-tight text-contrast flex items-center gap-2">
+            <a href="#/" onClick={(e)=>{ e.preventDefault(); nav(role ? ({admin:'/admin',manager:'/manager',client:'/client',employee:'/employee'})[role] : '/login'); closeMobile(); }} className="font-extrabold text-2xl tracking-tight text-contrast flex items-center gap-2">
               <img src="assets/woden-logo-black.svg" alt="Woden" className="h-6" />
             </a>
             <button onClick={closeMobile} className="md:hidden ml-auto w-8 h-8 flex items-center justify-center text-ink-soft hover:text-contrast rounded-lg" aria-label="Close menu">✕</button>
@@ -246,7 +246,7 @@ function RoleSwitcher({ role, setRole, nav, chatOpen }) {
 
   const switchTo = (r) => {
     setRole(r); setOpen(false);
-    nav({ admin: '/admin', manager: '/manager', client: '/client', employee: '/employee/storyguide' }[r]);
+    nav({ admin: '/admin', manager: '/manager', client: '/client', employee: '/employee' }[r]);
     toast(`Switched to ${window.WODEN.MOCK_USERS[r].name}`);
   };
 

@@ -29,17 +29,17 @@ function App() {
     if (route.startsWith('/manager/projects/')) return <ProjectEditor nav={nav} projectId={route.split('/')[3]} role="manager" />;
     if (route === '/manager/clients') return <ClientsTable nav={nav} />;
     if (route === '/client') return <ClientDash nav={nav} />;
+    if (route.endsWith('/edit') && route.startsWith('/client/projects/')) return <ProjectEditor nav={nav} projectId={route.split('/')[3]} role="client" />;
     if (route === '/client/storyguide' || route.startsWith('/client/projects/')) return <StoryGuide search={sgSearch} onSearchChange={setSgSearch} />;
-    if (route === '/client/customize') return <Customize nav={nav} />;
-    if (route.startsWith('/client/team/')) return <Team projectId={route.split('/')[3]} />;
-    if (route === '/client/team') return <Team projectId={null} />;
     if (route === '/client/settings') return <ClientSettings />;
-    if (route === '/employee' || route === '/employee/storyguide') return <StoryGuide readOnly search={sgSearch} onSearchChange={setSgSearch} />;
+    if (route === '/employee') return <EmployeeHome nav={nav} />;
+    if (route === '/employee/settings') return <EmployeeSettings />;
+    if (route === '/employee/storyguide') return <StoryGuide readOnly search={sgSearch} onSearchChange={setSgSearch} />;
     if (route.startsWith('/preview/')) return <StoryGuide readOnly search={sgSearch} onSearchChange={setSgSearch} />;
     return <NotFound nav={nav} />;
   };
 
-  const isSgRoute = route === '/client/storyguide' || route === '/employee/storyguide' || route === '/employee' || route.startsWith('/preview/');
+  const isSgRoute = route === '/client/storyguide' || route === '/employee/storyguide' || route.startsWith('/preview/');
   const isSgSearch = isSgRoute || route.includes('storyguide');
 
   return (
