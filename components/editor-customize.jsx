@@ -42,12 +42,75 @@ const MAMMOTH_STYLE_MAP = [
   "p[style-name='Code'] => pre:fresh",
 ];
 
+// Scope every selector in a docx-preview <style> block under a wrapper class so
+// the document's CSS doesn't bleed into TinyMCE's chrome / parent body styles.
+function scopeDocxCss(css, scopeSelector) {
+  if (!css) return '';
+  // Naive but adequate: prefix each selector at the start of a rule. Skips @-rules.
+  return css.replace(/(^|\})\s*([^@{}][^{}]*)\{/g, (m, brace, selectors) => {
+    const scoped = selectors
+      .split(',')
+      .map((sel) => {
+        const s = sel.trim();
+        if (!s) return s;
+        // Avoid scoping html/body — rewrite them to the wrapper instead.
+        if (/^(html|body)\b/i.test(s)) return scopeSelector + s.replace(/^(html|body)/i, '');
+        return `${scopeSelector} ${s}`;
+      })
+      .filter(Boolean)
+      .join(', ');
+    return `${brace} ${scoped} {`;
+  });
+}
+
 async function loadTemplateDocxAsHtml() {
   const res = await fetch(TEMPLATE_DOCX_URL);
   if (!res.ok) throw new Error(`Template fetch failed: ${res.status}`);
   const buf = await res.arrayBuffer();
+
+  // Preferred path: docx-preview renders the .docx with full visual fidelity
+  // (inline styles + a <style> block with named-style classes).
+  if (window.docx && typeof window.docx.renderAsync === 'function') {
+    try {
+      const htmlContainer = document.createElement('div');
+      const styleContainer = document.createElement('div');
+      await window.docx.renderAsync(buf, htmlContainer, styleContainer, {
+        inWrapper: false,            // we handle our own wrapper class
+        ignoreWidth: false,
+        ignoreHeight: true,          // page height would clip content in the editor
+        ignoreFonts: false,
+        breakPages: false,           // no page breaks inside the editor
+        ignoreLastRenderedPageBreak: true,
+        experimental: true,          // enables tab/list improvements
+        trimXmlDeclaration: true,
+        useBase64URL: true,          // embed images as data: URLs
+        renderHeaders: false,
+        renderFooters: false,
+        renderFootnotes: true,
+        renderEndnotes: true,
+      });
+
+      // Pull <style> contents out of the style container and scope them.
+      const SCOPE = '.wdn-docx';
+      const cssChunks = Array.from(styleContainer.querySelectorAll('style'))
+        .map((s) => scopeDocxCss(s.textContent || '', SCOPE))
+        .join('\n');
+
+      // Embed the <style> block inside the returned HTML so the styling
+      // survives a save/reload cycle (TinyMCE preserves it because of
+      // extended_valid_elements: '*[*]'). The init-time head injection below
+      // still runs as a belt-and-braces safeguard.
+      const html =
+        `<style data-docx="1">${cssChunks}</style>` +
+        `<div class="wdn-docx">${htmlContainer.innerHTML}</div>`;
+      return { html, css: cssChunks };
+    } catch (err) {
+      console.warn('[loadTemplateDocxAsHtml] docx-preview failed, falling back to mammoth:', err);
+    }
+  }
+
+  // Fallback: mammoth. Strips visual styling by design but always works.
   const mammoth = await waitForGlobal('mammoth');
-  // Embed images as base64 instead of dropping them.
   const convertImage = mammoth.images.imgElement((image) =>
     image.read('base64').then((data) => ({
       src: `data:${image.contentType};base64,${data}`,
@@ -59,7 +122,7 @@ async function loadTemplateDocxAsHtml() {
     convertImage,
     includeDefaultStyleMap: true,
   });
-  return result.value || '';
+  return { html: result.value || '', css: '' };
 }
 
 function WYSIWYGEditor({ sectionN, title, content, onChange }) {
@@ -113,7 +176,7 @@ function WYSIWYGEditor({ sectionN, title, content, onChange }) {
           valid_children: '+body[style]',
           valid_styles: {
             '*':
-              'color,background-color,background,font-family,font-size,font-weight,font-style,' +
+              'color,background-color,background,font-family,font-size,font-weight,font-style,font-variant,' +
               'text-align,text-decoration,text-indent,text-transform,line-height,letter-spacing,' +
               'margin,margin-top,margin-right,margin-bottom,margin-left,' +
               'padding,padding-top,padding-right,padding-bottom,padding-left,' +
@@ -121,7 +184,10 @@ function WYSIWYGEditor({ sectionN, title, content, onChange }) {
               'border-color,border-style,border-width,border-collapse,border-spacing,' +
               'width,height,max-width,min-width,vertical-align,white-space,' +
               'list-style,list-style-type,list-style-position,' +
-              'float,clear,display',
+              'float,clear,display,' +
+              // Word-specific properties we deliberately keep so list rendering survives.
+              'mso-list,mso-level-number-format,mso-level-text,mso-level-tab-stop,' +
+              'mso-pagination,mso-spacerun,mso-line-height-rule',
           },
           // Strip Word-specific noise (mso-* CSS, MsoNormal classes, <o:p>) on paste.
           paste_postprocess: (editor, args) => {
@@ -140,22 +206,32 @@ function WYSIWYGEditor({ sectionN, title, content, onChange }) {
               }
             });
 
-            // Strip mso-* declarations from inline style attributes.
+            // Strip noisy mso-* declarations but keep ones that drive list/page layout.
+            // Without these, Word lists collapse into flat paragraphs.
+            const KEEP_MSO_PROPS = /^mso-(list|level-|pagination|line-height-rule|spacerun)/i;
             root.querySelectorAll('[style]').forEach((el) => {
               const cleaned = (el.getAttribute('style') || '')
                 .split(';')
                 .map((s) => s.trim())
-                .filter((s) => s && !/^mso-/i.test(s) && !/^tab-stops/i.test(s) && !/^page-break-/i.test(s))
+                .filter((s) => {
+                  if (!s) return false;
+                  if (/^tab-stops/i.test(s)) return false;
+                  if (/^page-break-/i.test(s)) return false;
+                  if (/^mso-/i.test(s)) return KEEP_MSO_PROPS.test(s);
+                  return true;
+                })
                 .join('; ');
               if (cleaned) el.setAttribute('style', cleaned);
               else el.removeAttribute('style');
             });
 
-            // Drop Mso* classes (MsoNormal, MsoListParagraph, etc.).
+            // Drop most Mso* classes but keep MsoListParagraph* — paired with the
+            // mso-list style above to reconstruct Word's list indentation.
+            const KEEP_MSO_CLASS = /^MsoListParagraph/i;
             root.querySelectorAll('[class]').forEach((el) => {
               const cls = (el.getAttribute('class') || '')
                 .split(/\s+/)
-                .filter((c) => c && !/^Mso/i.test(c))
+                .filter((c) => c && (!/^Mso/i.test(c) || KEEP_MSO_CLASS.test(c)))
                 .join(' ');
               if (cls) el.setAttribute('class', cls);
               else el.removeAttribute('class');
@@ -204,7 +280,22 @@ function WYSIWYGEditor({ sectionN, title, content, onChange }) {
             { text: 'Bash', value: 'bash' },
             { text: 'Python', value: 'python' },
           ],
-          font_family_formats: "GT Pressura='GT Pressura', system-ui, sans-serif; System='-apple-system', BlinkMacSystemFont, sans-serif; Serif=Georgia, 'Times New Roman', serif; Mono='SF Mono', Menlo, ui-monospace, monospace",
+          font_family_formats:
+            "GT Pressura='GT Pressura', system-ui, sans-serif;" +
+            "System='-apple-system', BlinkMacSystemFont, sans-serif;" +
+            "Serif=Georgia, 'Times New Roman', serif;" +
+            "Mono='SF Mono', Menlo, ui-monospace, monospace;" +
+            // Common Word fonts — listed so pasted Word content keeps its family
+            // name in the dropdown rather than silently falling back.
+            "Calibri=Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif;" +
+            "Cambria=Cambria, Georgia, serif;" +
+            "Times New Roman='Times New Roman', Times, serif;" +
+            "Arial=Arial, Helvetica, sans-serif;" +
+            "Helvetica=Helvetica, Arial, sans-serif;" +
+            "Georgia=Georgia, serif;" +
+            "Verdana=Verdana, Geneva, sans-serif;" +
+            "Tahoma=Tahoma, Geneva, sans-serif;" +
+            "Courier New='Courier New', Courier, monospace",
           font_size_formats: '11px 12px 13px 14px 16px 18px 20px 24px 32px 40px',
           block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4; Quote=blockquote; Code=pre',
           content_style: "body { font-family: 'GT Pressura', system-ui, -apple-system, sans-serif; font-size: 14px; color: #131215; line-height: 1.6; padding: 8px 12px; } table.tbl-bordered td, table.tbl-bordered th { border: 1px solid #BEBEBE; padding: 6px 8px; } table.tbl-striped tr:nth-child(even) { background: #F3F3F3; }",
@@ -213,17 +304,54 @@ function WYSIWYGEditor({ sectionN, title, content, onChange }) {
           placeholder: `Write the ${title} section here…`,
           setup: (ed) => {
             editorRef.current = ed;
+            // Pull any <style data-docx> blocks out of saved content and apply
+            // them to the iframe head — required for subsequent reloads where
+            // we go through this fast-path branch (no docx render).
+            const reapplyDocxStyles = (htmlString) => {
+              try {
+                const matches = htmlString.match(/<style[^>]*data-docx[^>]*>([\s\S]*?)<\/style>/gi);
+                if (!matches || !matches.length) return;
+                const doc = ed.getDoc();
+                if (!doc || !doc.head) return;
+                matches.forEach((tag) => {
+                  const css = tag.replace(/^<style[^>]*>/i, '').replace(/<\/style>$/i, '');
+                  const styleEl = doc.createElement('style');
+                  styleEl.setAttribute('data-source', 'docx-template');
+                  styleEl.appendChild(doc.createTextNode(css));
+                  doc.head.appendChild(styleEl);
+                });
+              } catch (e) {
+                console.warn('[WYSIWYGEditor] failed to reapply docx css:', e);
+              }
+            };
+
             ed.on('init', async () => {
               if (cancelled) return;
               const initial = initialContentRef.current;
               if (initial && initial.trim()) {
+                reapplyDocxStyles(initial);
                 ed.setContent(initial);
                 setLoading(false);
                 return;
               }
               try {
-                const html = await loadTemplateDocxAsHtml();
+                const { html, css } = await loadTemplateDocxAsHtml();
                 if (cancelled) return;
+                // Inject the document's own CSS into the editor iframe head so
+                // classes like .docx-paragraph etc. resolve to their Word styles.
+                if (css) {
+                  try {
+                    const doc = ed.getDoc();
+                    if (doc && doc.head) {
+                      const styleEl = doc.createElement('style');
+                      styleEl.setAttribute('data-source', 'docx-template');
+                      styleEl.appendChild(doc.createTextNode(css));
+                      doc.head.appendChild(styleEl);
+                    }
+                  } catch (cssErr) {
+                    console.warn('[WYSIWYGEditor] failed to inject docx css:', cssErr);
+                  }
+                }
                 ed.setContent(html);
                 onChangeRef.current && onChangeRef.current(html);
                 if (typeof toast === 'function') toast('Template loaded from Word ✓');

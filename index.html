@@ -11,8 +11,12 @@
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
 
-  <!-- TinyMCE (GPL self-hosted via CDN) + mammoth.js for .docx import -->
+  <!-- TinyMCE (GPL self-hosted via CDN) + .docx import stack.
+       docx-preview gives visual-fidelity rendering (inline styles + <style> block);
+       mammoth is kept as a fallback when docx-preview can't handle a doc. -->
   <script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js" referrerpolicy="origin"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.5/dist/docx-preview.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
 
   <!-- Tailwind CSS -->
