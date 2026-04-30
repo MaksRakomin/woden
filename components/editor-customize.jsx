@@ -1,37 +1,269 @@
 const { useState: useStateE, useRef: useRefE, useEffect: useEffectE } = React;
 
-function WYSIWYGEditor({ sectionN, title, content, onChange }) {
-  const ref = useRefE(null);
-  useEffectE(() => { const el = ref.current; if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }, [content]);
-  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+const TEMPLATE_DOCX_URL = './assets/docs/template.docx';
 
-  const insertAround = (before, after) => {
-    const el = ref.current; if (!el) return;
-    const start = el.selectionStart, end = el.selectionEnd;
-    const sel = content.slice(start, end) || 'text';
-    onChange(content.slice(0, start) + before + sel + after + content.slice(end));
-    setTimeout(() => { el.focus(); el.selectionStart = start + before.length; el.selectionEnd = start + before.length + sel.length; }, 0);
-  };
+// Wait for `window.tinymce` and `window.mammoth` to become available.
+// Both are loaded via <script> in index.html; this guards against init races.
+function waitForGlobal(name, timeoutMs = 5000) {
+  return new Promise((resolve, reject) => {
+    if (window[name]) return resolve(window[name]);
+    const start = Date.now();
+    const tick = () => {
+      if (window[name]) return resolve(window[name]);
+      if (Date.now() - start > timeoutMs) return reject(new Error(`${name} not loaded`));
+      setTimeout(tick, 50);
+    };
+    tick();
+  });
+}
 
-  const TBtn = ({ label, title, cls='', action }) => (
-      <button className={`inline-flex items-center justify-center bg-base border-[1.5px] border-light-gray rounded-md px-2.5 py-1 cursor-pointer text-[13px] text-contrast transition-colors hover:border-contrast active:bg-paper-warm min-w-[28px] ${cls}`} title={title} onMouseDown={e => { e.preventDefault(); action(); }}>{label}</button>
+// Map common Word paragraph/run styles to semantic HTML+classes so we can
+// re-style them in TinyMCE's content_style. Mammoth strips visual styling by
+// design — this preserves at least the *named* styles from the .docx.
+const MAMMOTH_STYLE_MAP = [
+  "p[style-name='Title'] => h1.doc-title:fresh",
+  "p[style-name='Subtitle'] => p.doc-subtitle:fresh",
+  "p[style-name='Heading 1'] => h1:fresh",
+  "p[style-name='Heading 2'] => h2:fresh",
+  "p[style-name='Heading 3'] => h3:fresh",
+  "p[style-name='Heading 4'] => h4:fresh",
+  "p[style-name='Heading 5'] => h5:fresh",
+  "p[style-name='Heading 6'] => h6:fresh",
+  "p[style-name='Quote'] => blockquote:fresh",
+  "p[style-name='Intense Quote'] => blockquote.intense:fresh",
+  "p[style-name='Caption'] => p.caption:fresh",
+  "p[style-name='List Paragraph'] => p.list-paragraph:fresh",
+  "r[style-name='Strong'] => strong",
+  "r[style-name='Emphasis'] => em",
+  "r[style-name='Intense Emphasis'] => em.intense",
+  "r[style-name='Subtle Emphasis'] => em.subtle",
+  "r[style-name='Book Title'] => cite",
+  "r[style-name='Code'] => code",
+  "p[style-name='Code'] => pre:fresh",
+];
+
+async function loadTemplateDocxAsHtml() {
+  const res = await fetch(TEMPLATE_DOCX_URL);
+  if (!res.ok) throw new Error(`Template fetch failed: ${res.status}`);
+  const buf = await res.arrayBuffer();
+  const mammoth = await waitForGlobal('mammoth');
+  // Embed images as base64 instead of dropping them.
+  const convertImage = mammoth.images.imgElement((image) =>
+    image.read('base64').then((data) => ({
+      src: `data:${image.contentType};base64,${data}`,
+    })),
   );
+  const result = await mammoth.convertToHtml({
+    arrayBuffer: buf,
+    styleMap: MAMMOTH_STYLE_MAP,
+    convertImage,
+    includeDefaultStyleMap: true,
+  });
+  return result.value || '';
+}
+
+function WYSIWYGEditor({ sectionN, title, content, onChange }) {
+  const containerRef = useRefE(null);
+  const editorRef = useRefE(null);
+  const onChangeRef = useRefE(onChange);
+  const initialContentRef = useRefE(content);
+  const [loading, setLoading] = useStateE(true);
+
+  // Keep latest onChange in a ref so the (one-shot) editor handlers always see it.
+  useEffectE(() => { onChangeRef.current = onChange; }, [onChange]);
+
+  useEffectE(() => {
+    let cancelled = false;
+    const target = containerRef.current;
+    if (!target) return;
+
+    (async () => {
+      try {
+        const tinymce = await waitForGlobal('tinymce');
+        if (cancelled) return;
+
+        await tinymce.init({
+          target,
+          license_key: 'gpl',
+          branding: false,
+          promotion: false,
+          statusbar: true,
+          menubar: 'file edit view insert format tools table help',
+          plugins: 'accordion advlist anchor autolink autoresize autosave charmap code codesample directionality emoticons fullscreen help image importcss insertdatetime link lists media nonbreaking pagebreak preview quickbars save searchreplace table visualblocks visualchars wordcount',
+          toolbar1: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | forecolor backcolor removeformat',
+          toolbar2: 'link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | blockquote codesample hr | searchreplace visualblocks code fullscreen preview help',
+          toolbar_mode: 'sliding',
+          quickbars_selection_toolbar: 'bold italic underline | quicklink h2 h3 blockquote',
+          quickbars_insert_toolbar: 'quickimage quicktable',
+          contextmenu: 'link image table',
+          // Static-host friendly: paste images inline as base64 instead of uploading.
+          automatic_uploads: false,
+          paste_data_images: true,
+          // Preserve as much Word/Office formatting as the GPL build allows.
+          // (1:1 fidelity requires the premium PowerPaste plugin.)
+          paste_as_text: false,
+          paste_block_drop: false,
+          paste_merge_formats: true,
+          paste_webkit_styles: 'all',
+          paste_remove_styles_if_webkit: false,
+          // Allow any tag/attribute through TinyMCE's schema; we narrow CSS
+          // properties via valid_styles below and clean Word junk in
+          // paste_postprocess.
+          extended_valid_elements: '*[*]',
+          valid_children: '+body[style]',
+          valid_styles: {
+            '*':
+              'color,background-color,background,font-family,font-size,font-weight,font-style,' +
+              'text-align,text-decoration,text-indent,text-transform,line-height,letter-spacing,' +
+              'margin,margin-top,margin-right,margin-bottom,margin-left,' +
+              'padding,padding-top,padding-right,padding-bottom,padding-left,' +
+              'border,border-top,border-right,border-bottom,border-left,' +
+              'border-color,border-style,border-width,border-collapse,border-spacing,' +
+              'width,height,max-width,min-width,vertical-align,white-space,' +
+              'list-style,list-style-type,list-style-position,' +
+              'float,clear,display',
+          },
+          // Strip Word-specific noise (mso-* CSS, MsoNormal classes, <o:p>) on paste.
+          paste_postprocess: (editor, args) => {
+            const root = args.node;
+            if (!root || !root.querySelectorAll) return;
+
+            // Remove Word namespaced placeholder elements (<o:p>, <w:*>, <m:*>).
+            Array.from(root.getElementsByTagName('*')).forEach((el) => {
+              const tag = el.tagName ? el.tagName.toLowerCase() : '';
+              if (tag.startsWith('o:') || tag.startsWith('w:') || tag.startsWith('m:')) {
+                // Replace with its children to keep text content.
+                const parent = el.parentNode;
+                if (!parent) return;
+                while (el.firstChild) parent.insertBefore(el.firstChild, el);
+                parent.removeChild(el);
+              }
+            });
+
+            // Strip mso-* declarations from inline style attributes.
+            root.querySelectorAll('[style]').forEach((el) => {
+              const cleaned = (el.getAttribute('style') || '')
+                .split(';')
+                .map((s) => s.trim())
+                .filter((s) => s && !/^mso-/i.test(s) && !/^tab-stops/i.test(s) && !/^page-break-/i.test(s))
+                .join('; ');
+              if (cleaned) el.setAttribute('style', cleaned);
+              else el.removeAttribute('style');
+            });
+
+            // Drop Mso* classes (MsoNormal, MsoListParagraph, etc.).
+            root.querySelectorAll('[class]').forEach((el) => {
+              const cls = (el.getAttribute('class') || '')
+                .split(/\s+/)
+                .filter((c) => c && !/^Mso/i.test(c))
+                .join(' ');
+              if (cls) el.setAttribute('class', cls);
+              else el.removeAttribute('class');
+            });
+
+            // Remove empty <span> wrappers Word loves to emit.
+            root.querySelectorAll('span').forEach((el) => {
+              if (!el.attributes.length && el.parentNode) {
+                while (el.firstChild) el.parentNode.insertBefore(el.firstChild, el);
+                el.parentNode.removeChild(el);
+              }
+            });
+          },
+          file_picker_types: 'image',
+          file_picker_callback: (cb, value, meta) => {
+            if (meta.filetype !== 'image') return;
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = () => {
+              const file = input.files && input.files[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = () => cb(reader.result, { title: file.name });
+              reader.readAsDataURL(file);
+            };
+            input.click();
+          },
+          image_caption: true,
+          image_advtab: true,
+          link_default_target: '_blank',
+          link_assume_external_targets: true,
+          table_default_attributes: { border: '1' },
+          table_default_styles: { 'border-collapse': 'collapse', 'width': '100%' },
+          table_class_list: [
+            { title: 'None', value: '' },
+            { title: 'Bordered', value: 'tbl-bordered' },
+            { title: 'Striped', value: 'tbl-striped' },
+          ],
+          codesample_languages: [
+            { text: 'HTML/XML', value: 'markup' },
+            { text: 'JavaScript', value: 'javascript' },
+            { text: 'CSS', value: 'css' },
+            { text: 'TypeScript', value: 'typescript' },
+            { text: 'JSON', value: 'json' },
+            { text: 'Bash', value: 'bash' },
+            { text: 'Python', value: 'python' },
+          ],
+          font_family_formats: "GT Pressura='GT Pressura', system-ui, sans-serif; System='-apple-system', BlinkMacSystemFont, sans-serif; Serif=Georgia, 'Times New Roman', serif; Mono='SF Mono', Menlo, ui-monospace, monospace",
+          font_size_formats: '11px 12px 13px 14px 16px 18px 20px 24px 32px 40px',
+          block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4; Quote=blockquote; Code=pre',
+          content_style: "body { font-family: 'GT Pressura', system-ui, -apple-system, sans-serif; font-size: 14px; color: #131215; line-height: 1.6; padding: 8px 12px; } table.tbl-bordered td, table.tbl-bordered th { border: 1px solid #BEBEBE; padding: 6px 8px; } table.tbl-striped tr:nth-child(even) { background: #F3F3F3; }",
+          min_height: 520,
+          autoresize_bottom_margin: 20,
+          placeholder: `Write the ${title} section here…`,
+          setup: (ed) => {
+            editorRef.current = ed;
+            ed.on('init', async () => {
+              if (cancelled) return;
+              const initial = initialContentRef.current;
+              if (initial && initial.trim()) {
+                ed.setContent(initial);
+                setLoading(false);
+                return;
+              }
+              try {
+                const html = await loadTemplateDocxAsHtml();
+                if (cancelled) return;
+                ed.setContent(html);
+                onChangeRef.current && onChangeRef.current(html);
+                if (typeof toast === 'function') toast('Template loaded from Word ✓');
+              } catch (err) {
+                console.warn('[WYSIWYGEditor] template load failed:', err);
+                if (typeof toast === 'function') toast('Could not load Word template');
+              } finally {
+                if (!cancelled) setLoading(false);
+              }
+            });
+            ed.on('input change keyup undo redo SetContent', () => {
+              const fn = onChangeRef.current;
+              if (fn) fn(ed.getContent());
+            });
+          },
+        });
+      } catch (err) {
+        console.warn('[WYSIWYGEditor] TinyMCE init failed:', err);
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      const ed = editorRef.current;
+      if (ed) {
+        try { ed.destroy(); } catch (e) { /* ignore */ }
+        editorRef.current = null;
+      }
+    };
+  }, []);
 
   return (
-      <div className="flex flex-col flex-1">
-        <div className="flex items-center gap-1 px-4 py-2.5 border-b-[1.5px] border-light-gray flex-wrap bg-paper-warm">
-          <TBtn label="B" cls="font-bold" title="Bold" action={() => insertAround('**', '**')} />
-          <TBtn label="I" cls="italic font-semibold" title="Italic" action={() => insertAround('_', '_')} />
-          <div className="w-px h-[22px] bg-light-gray mx-1.5 shrink-0" />
-          <TBtn label="H2" cls="font-mono text-[11px] tracking-wider" title="Heading 2" action={() => insertAround('\n## ', '\n')} />
-          <TBtn label="H3" cls="font-mono text-[11px] tracking-wider" title="Heading 3" action={() => insertAround('\n### ', '\n')} />
-          <div className="w-px h-[22px] bg-light-gray mx-1.5 shrink-0" />
-          <TBtn label="— List" title="Bullet list" action={() => insertAround('\n- ', '')} />
-          <TBtn label="❞" title="Quote" action={() => insertAround('\n> ', '\n')} />
-          <div className="flex-1 min-w-[20px]" />
-          <span className="text-[11px] font-mono text-ink-faint px-2 py-1">{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
-        </div>
-        <textarea ref={ref} className="wysiwyg-textarea" value={content} placeholder={`Write the ${title} section here…`} onChange={e => onChange(e.target.value)} rows={12} />
+      <div className="flex flex-col flex-1 relative">
+        {loading && (
+            <div className="px-4 py-2.5 text-[11px] font-mono text-ink-faint border-b-[1.5px] border-light-gray bg-paper-warm">
+              Loading editor…
+            </div>
+        )}
+        <textarea ref={containerRef} defaultValue={content} />
       </div>
   );
 }
