@@ -98,7 +98,7 @@ function NewProjectModal({ availableCompanies, currentRole, lockedClientId, onCl
 
   return (
       <div className="flex flex-col gap-3.5">
-        <Field label="Project name"><Input value={name} onChange={e => setName(e.target.value)} placeholder="Brand Strategy 2025" /></Field>
+        <Field label="Project name"><Input value={name} onChange={e => setName(e.target.value)} placeholder="Brand Strategy 2026" /></Field>
 
         <Field label="Template">
           <Select value={templateId} onChange={e => setTemplateId(e.target.value)}>

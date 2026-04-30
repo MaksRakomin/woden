@@ -37,7 +37,7 @@ function App() {
     if (route === '/employee') return <EmployeeHome nav={nav} />;
     if (route === '/employee/settings') return <EmployeeSettings />;
     if (route === '/employee/storyguide') return <StoryGuide readOnly search={sgSearch} onSearchChange={setSgSearch} />;
-    if (route.startsWith('/preview/')) return <StoryGuide readOnly search={sgSearch} onSearchChange={setSgSearch} />;
+    if (route.startsWith('/preview/')) return <StoryGuide readOnly search={sgSearch} onSearchChange={setSgSearch} onBack={() => window.history.back()} />;
     return <NotFound nav={nav} />;
   };
 
@@ -48,7 +48,7 @@ function App() {
       <div className="flex min-h-screen bg-base text-contrast font-sans">
         {role && !isSgRoute && <SideNav role={role} route={route} nav={nav} onLogout={() => { setRole(null); nav('/login'); }} mobileOpen={mobileNavOpen} setMobileOpen={setMobileNavOpen} />}
         <div className={`flex-1 flex flex-col min-w-0 ${isSgRoute ? 'h-screen overflow-hidden' : ''}`}>
-          {role && <SubBar route={route} role={role} search={isSgSearch ? sgSearch : null} onSearch={isSgSearch ? setSgSearch : null} onMenuClick={!isSgRoute ? () => setMobileNavOpen(true) : null} />}
+          {role && <SubBar route={route} role={role} search={isSgSearch ? sgSearch : null} onSearch={isSgSearch ? setSgSearch : null} onMenuClick={!isSgRoute ? () => setMobileNavOpen(true) : null} onBack={route.startsWith('/preview/') ? () => window.history.back() : null} />}
           <main className={`flex-1 w-full max-w-[1400px] mx-auto ${isSgRoute ? 'p-0 max-w-none overflow-hidden' : 'p-4 md:p-10'}`}>
             {renderScreen()}
           </main>

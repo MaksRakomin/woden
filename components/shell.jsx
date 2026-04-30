@@ -203,7 +203,7 @@ function SideNav({ role, route, nav, onLogout, mobileOpen, setMobileOpen }) {
   );
 }
 
-function SubBar({ route, role, search, onSearch, onMenuClick }) {
+function SubBar({ route, role, search, onSearch, onMenuClick, onBack }) {
   const parts = route.split('/').filter(Boolean);
   if (!parts.length) return null;
   const rootLabel = { admin: 'Admin', manager: 'Manager', client: 'Client', employee: 'Employee' }[parts[0]] || parts[0];
@@ -211,6 +211,9 @@ function SubBar({ route, role, search, onSearch, onMenuClick }) {
   return (
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 px-4 md:px-8 py-3 md:py-3.5 bg-base border-b border-light-gray sticky top-0 z-10">
         <div className="flex items-center gap-2 font-mono text-xs text-ink-soft tracking-wide flex-1 min-w-0">
+          {onBack && (
+            <button onClick={onBack} className="inline-flex items-center justify-center gap-2 border-2 rounded-full text-xl font-bold uppercase tracking-wide transition-all focus:outline-none focus:shadow-focus shrink-0 px-3 py-0 mr-2 bg-transparent text-contrast border-contrast hover:bg-contrast hover:text-white hover:no-underline ">←</button>
+          )}
           {onMenuClick && (
               <button onClick={onMenuClick} className="md:hidden -ml-1 w-9 h-9 flex items-center justify-center text-contrast hover:bg-super-light-gray rounded-lg shrink-0" aria-label="Open menu">
                 <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>

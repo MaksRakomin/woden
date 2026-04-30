@@ -96,7 +96,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
   }
 
   const isClient = role === 'client';
-  const lastStep = isClient ? 3 : 2;
+  const lastStep = 3;
 
   const [flowStep, setFlowStep] = useStateE(1);
   const [content, setContent] = useStateE(project.content || '');
@@ -199,10 +199,8 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
               <StepBtn n={1} label="Content" />
               <div className="w-8 h-[1.5px] bg-light-gray mx-2" />
               <StepBtn n={2} label="Brand" />
-              {isClient && <>
-                <div className="w-8 h-[1.5px] bg-light-gray mx-2" />
-                <StepBtn n={3} label="Team" />
-              </>}
+              <div className="w-8 h-[1.5px] bg-light-gray mx-2" />
+              <StepBtn n={3} label="Team" />
             </div>
           </div>
           <div className="flex gap-3 flex-wrap">
@@ -210,13 +208,11 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
             {flowStep === 1 && <><Button variant="ghost" size="sm" onClick={saveDraft}>Save draft</Button><Button variant="primary" onClick={() => goStep(2)}>Next step →</Button></>}
             {flowStep === 2 && <>
               <Button variant="ghost" onClick={() => goStep(1)}>← Back</Button>
-              {isClient
-                  ? <Button variant="primary" onClick={() => goStep(3)}>Next step →</Button>
-                  : <Button variant="primary" onClick={generate}>Generate project ✓</Button>}
+              <Button variant="primary" onClick={() => goStep(3)}>Next step →</Button>
             </>}
             {flowStep === 3 && <>
               <Button variant="ghost" onClick={() => goStep(2)}>← Back</Button>
-              <Button variant="primary" onClick={generate}>Generate project ✓</Button>
+              <Button variant="primary" onClick={generate}>{isClient ? 'Save project' : 'Generate project ✓'}</Button>
             </>}
           </div>
         </div>
@@ -224,20 +220,20 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
         {flowStep === 1 && <Card pad="p-0" className="overflow-hidden flex flex-col"><WYSIWYGEditor title="StoryGuide" content={content} onChange={setContent} /></Card>}
         {flowStep === 2 && (
             <div className="flex flex-col gap-6 max-w-[720px]">
-              <Card pad="p-5 sm:p-6" className="bg-paper-warm border-primary/30">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-bold mb-0.5 flex items-center gap-2"><span aria-hidden>✨</span>Auto-fill with AI</h3>
-                    <p className="text-ink-soft text-[12.5px] leading-snug m-0">Generate description, palette, and pre-prompt from your Step 1 content. You can edit the result.</p>
-                  </div>
-                  <Button variant="primary" size="sm" onClick={runAiAutofill} className={aiBusy ? 'opacity-70 pointer-events-none' : ''}>
-                    {aiBusy
-                        ? <><span className="inline-flex gap-1 items-center"><span className="w-1.5 h-1.5 rounded-full bg-current animate-[bounce-dots_1s_infinite]"/><span className="w-1.5 h-1.5 rounded-full bg-current animate-[bounce-dots_1s_infinite_0.15s]"/><span className="w-1.5 h-1.5 rounded-full bg-current animate-[bounce-dots_1s_infinite_0.3s]"/></span>Thinking</>
-                        : <>Auto-fill ✨</>}
-                  </Button>
-                </div>
-                {!content.trim() && <p className="font-mono text-[10px] text-ink-faint mt-2.5">Step 1 is empty — fill in some content first for richer suggestions.</p>}
-              </Card>
+              {/*<Card pad="p-5 sm:p-6" className="bg-paper-warm border-primary/30">*/}
+              {/*  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">*/}
+              {/*    <div className="flex-1 min-w-0">*/}
+              {/*      <h3 className="text-base font-bold mb-0.5 flex items-center gap-2"><span aria-hidden>✨</span>Auto-fill with AI</h3>*/}
+              {/*      <p className="text-ink-soft text-[12.5px] leading-snug m-0">Generate description, palette, and pre-prompt from your Step 1 content. You can edit the result.</p>*/}
+              {/*    </div>*/}
+              {/*    <Button variant="primary" size="sm" onClick={runAiAutofill} className={aiBusy ? 'opacity-70 pointer-events-none' : ''}>*/}
+              {/*      {aiBusy*/}
+              {/*          ? <><span className="inline-flex gap-1 items-center"><span className="w-1.5 h-1.5 rounded-full bg-current animate-[bounce-dots_1s_infinite]"/><span className="w-1.5 h-1.5 rounded-full bg-current animate-[bounce-dots_1s_infinite_0.15s]"/><span className="w-1.5 h-1.5 rounded-full bg-current animate-[bounce-dots_1s_infinite_0.3s]"/></span>Thinking</>*/}
+              {/*          : <>Auto-fill ✨</>}*/}
+              {/*    </Button>*/}
+              {/*  </div>*/}
+              {/*  {!content.trim() && <p className="font-mono text-[10px] text-ink-faint mt-2.5">Step 1 is empty — fill in some content first for richer suggestions.</p>}*/}
+              {/*</Card>*/}
 
               <Card pad="p-5 sm:p-7">
                 <h3 className="text-lg font-bold mb-1">Project description</h3>
@@ -280,26 +276,28 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
             </div>
         )}
 
-        {flowStep === 3 && isClient && (
+        {flowStep === 3 && (
             <div className="flex flex-col gap-6 max-w-[860px]">
               <Card pad="p-5 sm:p-7">
                 <div className="flex justify-between items-start gap-3 flex-wrap mb-3">
                   <div>
-                    <h3 className="text-lg font-bold mb-1">Assign employees</h3>
-                    <p className="text-ink-soft text-[13px] m-0">Add colleagues from your company who should be able to preview this StoryGuide. They'll see it as read-only.</p>
+                    <h3 className="text-lg font-bold mb-1">Assigned employees</h3>
+                    <p className="text-ink-soft text-[13px] m-0">{isClient ? "Add colleagues from your company who should be able to preview this StoryGuide. They'll see it as read-only." : 'Employees assigned to this project by the client.'}</p>
                   </div>
                   <Badge>{team.length} member{team.length === 1 ? '' : 's'}</Badge>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-5">
-                  <Input placeholder="name@company.co" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTeamMember()} className="flex-1" />
-                  <Button variant="primary" onClick={addTeamMember}>Add to project</Button>
-                </div>
+                {isClient && (
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-5">
+                      <Input placeholder="name@company.co" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTeamMember()} className="flex-1" />
+                      <Button variant="primary" onClick={addTeamMember}>Add to project</Button>
+                    </div>
+                )}
 
                 {team.length === 0 ? (
                     <div className="text-center py-8 border border-dashed border-light-gray rounded-lg">
                       <p className="text-ink-faint font-mono text-[11px] uppercase tracking-wider mb-1">No employees yet</p>
-                      <p className="text-ink-soft text-[13px] m-0">Add an email above to assign your first team member.</p>
+                      <p className="text-ink-soft text-[13px] m-0">{isClient ? 'Add an email above to assign your first team member.' : 'No employees have been assigned by the client.'}</p>
                     </div>
                 ) : (
                     <div className="flex flex-col gap-2">
@@ -311,7 +309,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
                               <div className="font-mono text-ink-soft text-[11px] truncate">{em}</div>
                             </div>
                             <Badge>{i === 0 ? 'Active' : 'Invited'}</Badge>
-                            <Button size="sm" variant="ghost" className="shrink-0" onClick={() => removeTeamMember(em)}>Remove</Button>
+                            {isClient && <Button size="sm" variant="ghost" className="shrink-0" onClick={() => removeTeamMember(em)}>Remove</Button>}
                           </div>
                       ))}
                     </div>
