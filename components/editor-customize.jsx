@@ -387,7 +387,7 @@ function WYSIWYGEditor({ sectionN, title, content, onChange }) {
   return (
       <div className="flex flex-col flex-1 relative">
         {loading && (
-            <div className="px-4 py-2.5 text-[11px] font-mono text-ink-faint border-b-[1.5px] border-light-gray bg-paper-warm">
+            <div className="px-4 py-2.5 text-[14px] font-mono text-ink-faint border-b-[1.5px] border-light-gray bg-paper-warm">
               Loading editor…
             </div>
         )}
@@ -538,8 +538,8 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
   const goStep = (n) => { persist(); setFlowStep(n); };
 
   const StepBtn = ({ n, label }) => (
-      <button type="button" onClick={() => goStep(n)} className={`group flex items-center gap-2 text-[13px] font-medium rounded-full pr-2 pl-1 py-0.5 transition-colors hover:bg-super-light-gray ${flowStep >= n ? 'text-contrast' : 'text-ink-faint'}`} aria-label={`Go to step ${n}`}>
-        <span className={`w-[22px] h-[22px] rounded-full border-[1.5px] flex items-center justify-center text-[10px] font-bold font-mono transition-all ${flowStep >= n ? 'bg-contrast border-contrast text-base' : 'border-ink-faint'}`}>{n}</span>
+      <button type="button" onClick={() => goStep(n)} className={`group flex items-center gap-2 text-sm font-medium rounded-full pr-2 pl-1 py-0.5 transition-colors hover:bg-super-light-gray ${flowStep >= n ? 'text-contrast' : 'text-ink-faint'}`} aria-label={`Go to step ${n}`}>
+        <span className={`w-[22px] h-[22px] rounded-full border-[1.5px] flex items-center justify-center text-[12px] font-bold font-mono transition-all ${flowStep >= n ? 'bg-contrast border-contrast text-base' : 'border-ink-faint'}`}>{n}</span>
         <span className={flowStep === n ? 'underline underline-offset-4 decoration-2' : ''}>{label}</span>
       </button>
   );
@@ -547,7 +547,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
   return (
       <div className="animate-screen-in">
         <div className="flex mb-2">
-          <a className="font-mono text-ink-soft text-[11px] cursor-pointer hover:underline" onClick={() => flowStep > 1 ? goStep(flowStep - 1) : nav(backRoute)}>← {flowStep > 1 ? 'BACK' : 'PROJECTS'}</a>
+          <a className="font-mono text-ink-soft text-[14px] cursor-pointer hover:underline" onClick={() => flowStep > 1 ? goStep(flowStep - 1) : nav(backRoute)}>← {flowStep > 1 ? 'BACK' : 'PROJECTS'}</a>
         </div>
         <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-start mb-6">
           <div className="min-w-0">
@@ -556,7 +556,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
               <Badge variant={project.status === 'published' ? 'accent' : project.status === 'review' ? 'soft' : 'default'}>{project.status}</Badge>
             </div>
             <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">{project.name}</h1>
-            <div className="font-mono text-[11px] text-ink-soft mt-1.5 flex flex-wrap gap-1">
+            <div className="font-mono text-[14px] text-ink-soft mt-1.5 flex flex-wrap gap-1">
               {cos.length > 0
                   ? cos.map((c, i) => <span key={c.id} className="inline-block">{c.name}{i < cos.length - 1 ? ' ·' : ''}</span>)
                   : <span className="text-ink-faint italic">no client linked</span>}
@@ -598,18 +598,18 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
               {/*          : <>Auto-fill ✨</>}*/}
               {/*    </Button>*/}
               {/*  </div>*/}
-              {/*  {!content.trim() && <p className="font-mono text-[10px] text-ink-faint mt-2.5">Step 1 is empty — fill in some content first for richer suggestions.</p>}*/}
+              {/*  {!content.trim() && <p className="font-mono text-[12px] text-ink-faint mt-2.5">Step 1 is empty — fill in some content first for richer suggestions.</p>}*/}
               {/*</Card>*/}
 
               <Card pad="p-5 sm:p-7">
                 <h3 className="text-lg font-bold mb-1">Project description</h3>
-                <p className="text-ink-soft text-[13px] mb-3.5">A short note on what this StoryGuide is for.</p>
+                <p className="text-ink-soft text-sm mb-3.5">A short note on what this StoryGuide is for.</p>
                 <textarea className="w-full px-3.5 py-2.5 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus" rows={3} placeholder="e.g. Brand voice refresh ahead of Q3 launch…" value={description} onChange={e => setDescription(e.target.value)} />
               </Card>
 
               <Card pad="p-5 sm:p-7">
                 <h3 className="text-lg font-bold mb-1">Brand palette</h3>
-                <p className="text-ink-soft text-[13px] mb-5">Define the colours that make up this client's identity.</p>
+                <p className="text-ink-soft text-sm mb-5">Define the colours that make up this client's identity.</p>
 
                 {/* Preview strip */}
                 {brandColors.length > 0 && (
@@ -692,10 +692,10 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
 
               <Card pad="p-5 sm:p-7">
                 <h3 className="text-lg font-bold mb-1">Logo</h3>
-                <p className="text-ink-soft text-[13px] mb-3.5">SVG / PNG / JPG, up to 2MB. Used in StoryGuide previews and exports.</p>
+                <p className="text-ink-soft text-sm mb-3.5">SVG / PNG / JPG, up to 2MB. Used in StoryGuide previews and exports.</p>
                 <div className="flex items-center gap-4 flex-wrap">
                   <div className="w-20 h-20 rounded-xl border border-light-gray bg-paper-warm flex items-center justify-center overflow-hidden shrink-0">
-                    {logo ? <img src={logo} alt="Logo preview" className="max-w-full max-h-full object-contain" /> : <span className="text-ink-faint font-mono text-[10px] uppercase">No logo</span>}
+                    {logo ? <img src={logo} alt="Logo preview" className="max-w-full max-h-full object-contain" /> : <span className="text-ink-faint font-mono text-[12px] uppercase">No logo</span>}
                   </div>
                   <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onLogoFile} />
                   <Button size="sm" variant="ghost" onClick={() => fileRef.current && fileRef.current.click()}>{logo ? 'Replace' : 'Upload logo'}</Button>
@@ -711,7 +711,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
                 <div className="flex justify-between items-start gap-3 flex-wrap mb-3">
                   <div>
                     <h3 className="text-lg font-bold mb-1">Assigned employees</h3>
-                    <p className="text-ink-soft text-[13px] m-0">{canManageTeam ? "Add colleagues who should be able to preview this StoryGuide. They'll see it as read-only." : 'Employees assigned to this project.'}</p>
+                    <p className="text-ink-soft text-sm m-0">{canManageTeam ? "Add colleagues who should be able to preview this StoryGuide. They'll see it as read-only." : 'Employees assigned to this project.'}</p>
                   </div>
                   <Badge>{team.length} member{team.length === 1 ? '' : 's'}</Badge>
                 </div>
@@ -725,8 +725,8 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
 
                 {team.length === 0 ? (
                     <div className="text-center py-8 border border-dashed border-light-gray rounded-lg">
-                      <p className="text-ink-faint font-mono text-[11px] uppercase tracking-wider mb-1">No employees yet</p>
-                      <p className="text-ink-soft text-[13px] m-0">{canManageTeam ? 'Add an email above to assign your first team member.' : 'No employees have been assigned yet.'}</p>
+                      <p className="text-ink-faint font-mono text-[14px] uppercase tracking-wider mb-1">No employees yet</p>
+                      <p className="text-ink-soft text-sm m-0">{canManageTeam ? 'Add an email above to assign your first team member.' : 'No employees have been assigned yet.'}</p>
                     </div>
                 ) : (
                     <div className="flex flex-col gap-2">
@@ -735,7 +735,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
                             <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">{em[0].toUpperCase()}</div>
                             <div className="flex-1 min-w-0">
                               <div className="font-bold truncate">{em.split('@')[0]}</div>
-                              <div className="font-mono text-ink-soft text-[11px] truncate">{em}</div>
+                              <div className="font-mono text-ink-soft text-[14px] truncate">{em}</div>
                             </div>
                             <Badge>{i === 0 ? 'Active' : 'Invited'}</Badge>
                             {canManageTeam && <Button size="sm" variant="ghost" className="shrink-0" onClick={() => removeTeamMember(em)}>Remove</Button>}
@@ -746,8 +746,8 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
               </Card>
 
               <Card pad="p-5 sm:p-6" className="bg-paper-warm">
-                <div className="font-bold text-[10px] uppercase tracking-widest text-ink-soft mb-2">Role · Client Employee</div>
-                <p className="text-ink-soft text-[13px] m-0">Employees see this project on their Home page with a single Preview button. They can read the StoryGuide but cannot edit content, brand, or team.</p>
+                <div className="font-bold text-[12px] uppercase tracking-widest text-ink-soft mb-2">Role · Client Employee</div>
+                <p className="text-ink-soft text-sm m-0">Employees see this project on their Home page with a single Preview button. They can read the StoryGuide but cannot edit content, brand, or team.</p>
               </Card>
             </div>
         )}
@@ -763,11 +763,11 @@ function Team({ projectId }) {
   return (
       <div className="animate-screen-in">
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start mb-1.5"><h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">Team</h1><div className="self-start"><Badge>{emails.length} members</Badge></div></div>
-        {project && <p className="font-mono text-ink-soft text-[11px] tracking-[0.1em] mb-1.5">{project.name.toUpperCase()}</p>}
+        {project && <p className="font-mono text-ink-soft text-[14px] tracking-[0.1em] mb-1.5">{project.name.toUpperCase()}</p>}
         <p className="text-ink-soft mb-6">Invite colleagues to access this project's StoryGuide.</p>
         <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6">
-          <Card><h3 className="text-lg font-bold mb-3">Members</h3><div className="flex flex-col gap-2">{emails.map((e, i) => (<div key={i} className="flex items-center gap-3 p-2.5 border-[1.5px] border-contrast rounded-lg flex-wrap sm:flex-nowrap"><div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">{e[0].toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-bold truncate">{e.split('@')[0]}</div><div className="font-mono text-ink-soft text-[11px] truncate">{e}</div></div><Badge>{i === 0 ? 'Active' : 'Invited'}</Badge><Button size="sm" variant="ghost" className="shrink-0" onClick={() => { const u = emails.filter((_, j) => j !== i); if (project) project.team = u; setEmails(u); toast('Removed'); }}>Remove</Button></div>))}</div></Card>
-          <Card><h3 className="text-lg font-bold mb-3">Invite by email</h3><Input placeholder="name@company.co" value={inv} onChange={e => setInv(e.target.value)} className="mb-2.5" onKeyDown={e => e.key === 'Enter' && add()} /><Button variant="primary" className="w-full justify-center" onClick={add}>Send invite</Button><div className="my-6 border-t border-light-gray" /><Label>Role</Label><p className="text-ink-soft text-[13px] mt-1 m-0">Client Employee · read-only StoryGuide + chat.</p></Card>
+          <Card><h3 className="text-lg font-bold mb-3">Members</h3><div className="flex flex-col gap-2">{emails.map((e, i) => (<div key={i} className="flex items-center gap-3 p-2.5 border-[1.5px] border-contrast rounded-lg flex-wrap sm:flex-nowrap"><div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">{e[0].toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-bold truncate">{e.split('@')[0]}</div><div className="font-mono text-ink-soft text-[14px] truncate">{e}</div></div><Badge>{i === 0 ? 'Active' : 'Invited'}</Badge><Button size="sm" variant="ghost" className="shrink-0" onClick={() => { const u = emails.filter((_, j) => j !== i); if (project) project.team = u; setEmails(u); toast('Removed'); }}>Remove</Button></div>))}</div></Card>
+          <Card><h3 className="text-lg font-bold mb-3">Invite by email</h3><Input placeholder="name@company.co" value={inv} onChange={e => setInv(e.target.value)} className="mb-2.5" onKeyDown={e => e.key === 'Enter' && add()} /><Button variant="primary" className="w-full justify-center" onClick={add}>Send invite</Button><div className="my-6 border-t border-light-gray" /><Label>Role</Label><p className="text-ink-soft text-sm mt-1 m-0">Client Employee · read-only StoryGuide + chat.</p></Card>
         </div>
       </div>
   );

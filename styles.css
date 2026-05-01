@@ -14,6 +14,9 @@
   font-weight: 700; font-style: normal; font-display: swap;
 }
 
+/* Base font scale (+25%: rem values scale from 20px instead of 16px) */
+html { font-size: 20px; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: #BEBEBE; border-radius: 4px; }

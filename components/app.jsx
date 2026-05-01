@@ -97,7 +97,7 @@ function NotFound({ nav }) {
 }
 
 function Tweaks({ tweaks, set, onClose }) {
-  const Opt = ({ k, v, label }) => <button className={`px-3 py-1.5 border border-contrast rounded-full font-bold text-[11px] uppercase tracking-widest transition-colors ${tweaks[k] === v ? 'bg-primary text-black border-primary' : 'bg-base text-contrast hover:bg-super-light-gray'}`} onClick={() => set(k, v)}>{label}</button>;
+  const Opt = ({ k, v, label }) => <button className={`px-3 py-1.5 border border-contrast rounded-full font-bold text-[14px] uppercase tracking-widest transition-colors ${tweaks[k] === v ? 'bg-primary text-black border-primary' : 'bg-base text-contrast hover:bg-super-light-gray'}`} onClick={() => set(k, v)}>{label}</button>;
   return (
       <div className="fixed top-[76px] right-3 left-3 w-auto sm:left-auto sm:right-6 sm:w-[300px] bg-base border border-light-gray rounded-[24px] shadow-lg z-[90] max-h-[calc(100vh-120px)] overflow-y-auto">
         <h4 className="p-4 border-b border-light-gray bg-super-light-gray m-0 flex justify-between items-center rounded-t-[24px] font-bold text-sm uppercase tracking-wider">
@@ -106,7 +106,7 @@ function Tweaks({ tweaks, set, onClose }) {
         <div className="p-4 flex flex-col gap-4">
           <div className="flex flex-col gap-2"><Label>Nav pattern</Label><div className="flex flex-wrap gap-1.5"><Opt k="navPattern" v="toc" label="Sticky ToC" /><Opt k="navPattern" v="scrollspy" label="Scroll-spy" /></div></div>
           <div className="flex flex-col gap-2"><Label>Section rhythm</Label><div className="flex flex-wrap gap-1.5"><Opt k="rhythm" v="editorial" label="Editorial" /><Opt k="rhythm" v="centered" label="Centered" /></div></div>
-          <p className="text-ink-soft text-[11px] m-0">Toggle via the Tweaks button in the top toolbar.</p>
+          <p className="text-ink-soft text-[14px] m-0">Toggle via the Tweaks button in the top toolbar.</p>
         </div>
       </div>
   );

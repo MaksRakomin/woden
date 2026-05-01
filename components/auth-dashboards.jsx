@@ -164,7 +164,7 @@ function Login({ setRole, nav }) {
             <div className="font-bold text-xs tracking-widest uppercase text-primary">Story is the strategy.</div>
           </div>
           <h2 className="text-center text-2xl font-bold mb-1.5">Sign in</h2>
-          <p className="text-center text-ink-soft text-[13px] mb-5">story is the strategy.</p>
+          <p className="text-center text-ink-soft text-sm mb-5">story is the strategy.</p>
           <div className="flex flex-col gap-3.5">
             <Field label="Email"><Input value={email} onChange={e => setEmail(e.target.value)} /></Field>
             <Field label="Password"><Input type="password" value={pwd} onChange={e => setPwd(e.target.value)} /></Field>
@@ -222,7 +222,7 @@ function AdminDash({ nav }) {
           ].map(([n, l, d]) => (
               <Card key={l} pad="p-6">
                 <div className="font-sans text-[2.75rem] font-extrabold leading-none tracking-tight">{n}</div>
-                <div className="font-bold text-[11px] uppercase tracking-widest text-ink-soft mt-2.5">{l}</div>
+                <div className="font-bold text-[14px] uppercase tracking-widest text-ink-soft mt-2.5">{l}</div>
                 <div className="font-mono text-xs text-primary mt-1">{d}</div>
               </Card>
           ))}
@@ -232,12 +232,12 @@ function AdminDash({ nav }) {
           <Card className="lg:col-span-2 p-0 overflow-hidden">
             <div className="flex justify-between items-center p-5 border-b border-light-gray">
               <h3 className="text-lg font-bold">Recent projects</h3>
-              <span className="text-primary font-mono text-[11px] cursor-pointer hover:underline" onClick={() => nav('/admin/clients')}>VIEW ALL →</span>
+              <span className="text-primary font-mono text-[14px] cursor-pointer hover:underline" onClick={() => nav('/admin/clients')}>VIEW ALL →</span>
             </div>
             <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-left border-collapse">
               <thead>
-              <tr>{['Client', 'Project', 'Manager', 'Status', 'Team', 'Updated'].map(h => <th key={h} className="py-4 px-5 border-b border-contrast font-bold text-[11px] uppercase tracking-widest text-ink-soft">{h}</th>)}</tr>
+              <tr>{['Client', 'Project', 'Manager', 'Status', 'Team', 'Updated'].map(h => <th key={h} className="py-4 px-5 border-b border-contrast font-bold text-[14px] uppercase tracking-widest text-ink-soft">{h}</th>)}</tr>
               </thead>
               <tbody>
               {allProjects.map(p => {
@@ -245,7 +245,7 @@ function AdminDash({ nav }) {
                 const mgrs = window.WODEN.getProjectManagers(p);
                 return (
                     <tr key={p.id} className="cursor-pointer hover:bg-super-light-gray transition-colors" onClick={() => nav('/admin/projects/' + p.id)}>
-                      <td className="py-4 px-5 border-b border-light-gray font-bold">{cos[0] ? cos[0].name : ''}{cos.length > 1 ? <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded bg-light-gray text-[10px] font-mono text-ink-soft">+{cos.length - 1}</span> : null}</td>
+                      <td className="py-4 px-5 border-b border-light-gray font-bold">{cos[0] ? cos[0].name : ''}{cos.length > 1 ? <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded bg-light-gray text-[12px] font-mono text-ink-soft">+{cos.length - 1}</span> : null}</td>
                       <td className="py-4 px-5 border-b border-light-gray">{p.name}</td>
                       <td className="py-4 px-5 border-b border-light-gray text-ink-soft">{mgrs.map(m => m.name).join(', ') || (cos[0]?.manager || '')}</td>
                       <td className="py-4 px-5 border-b border-light-gray"><Badge variant={p.status === 'published' ? 'accent' : p.status === 'review' ? 'soft' : 'default'}>{p.status}</Badge></td>
@@ -263,10 +263,10 @@ function AdminDash({ nav }) {
               <h3 className="text-lg font-bold mb-3">Activity feed</h3>
               <div className="flex flex-col gap-2.5">
                 {['Marcus published Meridian v1.3','Priya invited 2 clients','David opened chat 14x','Elena changed theme — Night','Jonah created Forgeworks'].map((a, i) => (
-                    <div key={i} className="flex items-center gap-2.5 text-[13px]">
-                      <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-bold shrink-0">{a[0]}</div>
+                    <div key={i} className="flex items-center gap-2.5 text-sm">
+                      <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[12px] font-bold shrink-0">{a[0]}</div>
                       <div className="flex-1 text-ink-soft">{a}</div>
-                      <span className="font-mono text-[10px] text-ink-faint">{i + 1}h</span>
+                      <span className="font-mono text-[12px] text-ink-faint">{i + 1}h</span>
                     </div>
                 ))}
               </div>
@@ -317,9 +317,9 @@ function ManagerDash({ nav }) {
                 <Card key={p.id} pad="p-5" className="cursor-pointer" onClick={() => nav('/manager/projects/' + p.id)}>
                   <div className="flex justify-between mb-1.5">
                     <Badge variant={p.status === 'published' ? 'accent' : p.status === 'review' ? 'soft' : 'default'}>{p.status}</Badge>
-                    {tpl && <span className="font-mono text-[10px] text-ink-faint uppercase">{tpl.category}</span>}
+                    {tpl && <span className="font-mono text-[12px] text-ink-faint uppercase">{tpl.category}</span>}
                   </div>
-                  <div className="font-mono text-[11px] text-ink-faint mb-1 truncate">{cos.map(c => c.name).join(' · ') || '—'}</div>
+                  <div className="font-mono text-[14px] text-ink-faint mb-1 truncate">{cos.map(c => c.name).join(' · ') || '—'}</div>
                   <h3 className="text-lg font-bold mb-3.5">{p.name}</h3>
                   <div className="h-2 bg-paper-warm border-[1.5px] border-light-gray rounded overflow-hidden">
                     <div className="h-full bg-primary" style={{width: (p.sections / 14 * 100) + '%'}} />
@@ -343,7 +343,7 @@ function ManagerDash({ nav }) {
           <div className="p-5 border-b border-light-gray"><h3 className="text-lg font-bold">My clients</h3></div>
           <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-left border-collapse">
-            <thead><tr>{['Client', 'Projects', ''].map(h => <th key={h} className="py-4 px-5 border-b border-contrast font-bold text-[11px] uppercase tracking-widest text-ink-soft">{h}</th>)}</tr></thead>
+            <thead><tr>{['Client', 'Projects', ''].map(h => <th key={h} className="py-4 px-5 border-b border-contrast font-bold text-[14px] uppercase tracking-widest text-ink-soft">{h}</th>)}</tr></thead>
             <tbody>
             {myCompanies.map(c => {
               const count = window.WODEN.PROJECTS.filter(p => p.clientId === c.id).length;
@@ -370,7 +370,7 @@ function ClientDash({ nav }) {
   return (
       <div className="animate-screen-in">
         <Card pad="p-5 sm:p-8" className="mb-7 bg-paper-warm">
-          <div className="font-mono text-[11px] tracking-[0.15em] text-ink-faint">WELCOME BACK, ELENA</div>
+          <div className="font-mono text-[14px] tracking-[0.15em] text-ink-faint">WELCOME BACK, ELENA</div>
           <h1 className="text-3xl sm:text-4xl font-bold mt-2 mb-1.5">{u.company}</h1>
           <p className="text-base sm:text-lg text-ink-soft m-0">"{window.WODEN.MERIDIAN.tagline}"</p>
           <Note className="hidden sm:block absolute -top-4 right-6 rotate-3">your projects</Note>
@@ -384,7 +384,7 @@ function ClientDash({ nav }) {
               <Card key={p.id} pad="p-5" className="cursor-pointer" onClick={() => nav('/client/projects/' + p.id)}>
                 <div className="flex justify-between mb-2.5">
                   <Badge variant={p.status === 'published' ? 'accent' : p.status === 'review' ? 'soft' : 'default'}>{p.status}</Badge>
-                  <span className="font-mono text-[11px] text-ink-faint">{p.team.length} members · {p.updated}</span>
+                  <span className="font-mono text-[14px] text-ink-faint">{p.team.length} members · {p.updated}</span>
                 </div>
                 <h3 className="text-xl font-bold mb-4">{p.name}</h3>
                 <div className="flex gap-2 flex-wrap">
@@ -405,7 +405,7 @@ function EmployeeHome({ nav }) {
   return (
       <div className="animate-screen-in">
         <Card pad="p-5 sm:p-8" className="mb-7 bg-paper-warm">
-          <div className="font-mono text-[11px] tracking-[0.15em] text-ink-faint">READ-ONLY ACCESS · {u.name.toUpperCase()}</div>
+          <div className="font-mono text-[14px] tracking-[0.15em] text-ink-faint">READ-ONLY ACCESS · {u.name.toUpperCase()}</div>
           <h1 className="text-3xl sm:text-4xl font-bold mt-2 mb-1.5">{u.company}</h1>
           <p className="text-base sm:text-lg text-ink-soft m-0">Projects you've been assigned to.</p>
         </Card>
@@ -416,7 +416,7 @@ function EmployeeHome({ nav }) {
         {projects.length === 0 ? (
             <Card pad="p-8" className="text-center">
               <p className="text-ink-soft mb-1">No projects assigned to you yet.</p>
-              <p className="font-mono text-[11px] text-ink-faint">Ask your client admin to add you to a project's Team.</p>
+              <p className="font-mono text-[14px] text-ink-faint">Ask your client admin to add you to a project's Team.</p>
             </Card>
         ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -427,9 +427,9 @@ function EmployeeHome({ nav }) {
                     <Card key={p.id} pad="p-5">
                       <div className="flex justify-between mb-2.5 flex-wrap gap-2">
                         <Badge variant={p.status === 'published' ? 'accent' : p.status === 'review' ? 'soft' : 'default'}>{p.status}</Badge>
-                        {tpl && <span className="font-mono text-[10px] text-ink-faint uppercase self-center">{tpl.category}</span>}
+                        {tpl && <span className="font-mono text-[12px] text-ink-faint uppercase self-center">{tpl.category}</span>}
                       </div>
-                      <div className="font-mono text-[11px] text-ink-faint mb-1 truncate">{cos.map(c => c.name).join(' · ') || '—'}</div>
+                      <div className="font-mono text-[14px] text-ink-faint mb-1 truncate">{cos.map(c => c.name).join(' · ') || '—'}</div>
                       <h3 className="text-xl font-bold mb-4">{p.name}</h3>
                       <Button size="sm" variant="primary" onClick={() => nav('/preview/' + p.id)}>Preview →</Button>
                     </Card>
@@ -465,7 +465,7 @@ function EmployeeSettings() {
               <Field label="Name"><Input defaultValue={u.name} disabled /></Field>
               <Field label="Email"><Input defaultValue={u.email} disabled /></Field>
               <Field label="Company"><Input defaultValue={u.company} disabled /></Field>
-              <p className="font-mono text-[10px] text-ink-faint">Profile fields are managed by your client admin.</p>
+              <p className="font-mono text-[12px] text-ink-faint">Profile fields are managed by your client admin.</p>
             </div>
           </Card>
           <Card>
@@ -508,7 +508,7 @@ function ManagersTable() {
         <Card pad="p-0" className="overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-left border-collapse">
-            <thead><tr>{['Name', 'Email', 'Clients', 'Projects', ''].map(h => <th key={h} className="py-4 px-5 border-b border-contrast font-bold text-[11px] uppercase tracking-widest text-ink-soft">{h}</th>)}</tr></thead>
+            <thead><tr>{['Name', 'Email', 'Clients', 'Projects', ''].map(h => <th key={h} className="py-4 px-5 border-b border-contrast font-bold text-[14px] uppercase tracking-widest text-ink-soft">{h}</th>)}</tr></thead>
             <tbody>
             {managers.map(m => (
                 <tr key={m.id} className="hover:bg-super-light-gray transition-colors">
@@ -553,7 +553,7 @@ function ClientsTable({ nav }) {
         <Card pad="p-0" className="overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left border-collapse">
-            <thead><tr>{['', 'Client', 'Manager', 'Projects', ''].map((h,i) => <th key={i} className={`py-4 px-5 border-b border-contrast font-bold text-[11px] uppercase tracking-widest text-ink-soft ${i===0?'w-8':''}`}>{h}</th>)}</tr></thead>
+            <thead><tr>{['', 'Client', 'Manager', 'Projects', ''].map((h,i) => <th key={i} className={`py-4 px-5 border-b border-contrast font-bold text-[14px] uppercase tracking-widest text-ink-soft ${i===0?'w-8':''}`}>{h}</th>)}</tr></thead>
             <tbody>
             {companies.map(c => {
               const projects = window.WODEN.PROJECTS.filter(p => (p.clientIds || []).includes(c.id));
@@ -575,14 +575,14 @@ function ClientsTable({ nav }) {
                     {isOpen && projects.length === 0 && (
                         <tr className="bg-super-light-gray animate-accordion-in">
                           <td className="border-b border-light-gray"></td>
-                          <td colSpan={3} className="py-4 px-5 border-b border-light-gray pl-7 text-ink-faint text-[13px] italic">No projects yet</td>
+                          <td colSpan={3} className="py-4 px-5 border-b border-light-gray pl-7 text-ink-faint text-sm italic">No projects yet</td>
                           <td className="py-4 px-5 border-b border-light-gray text-right"><Button size="sm" variant="ghost" onClick={() => setProjectModal(c.id)}>+ Add project</Button></td>
                         </tr>
                     )}
                     {isOpen && projects.map(p => (
                         <tr key={p.id} className="bg-super-light-gray cursor-pointer hover:bg-light-gray transition-colors animate-accordion-in" onClick={() => nav('/admin/projects/' + p.id)}>
                           <td className="py-4 px-5 border-b border-light-gray text-center text-ink-faint text-sm">└</td>
-                          <td className="py-4 px-5 border-b border-light-gray pl-3 text-[13px]">{p.name}</td>
+                          <td className="py-4 px-5 border-b border-light-gray pl-3 text-sm">{p.name}</td>
                           <td className="py-4 px-5 border-b border-light-gray"><Badge variant={p.status === 'published' ? 'accent' : p.status === 'review' ? 'soft' : 'default'}>{p.status}</Badge></td>
                           <td className="py-4 px-5 border-b border-light-gray text-ink-soft text-xs">{p.team.length} members · {p.updated}</td>
                           <td className="py-4 px-5 border-b border-light-gray text-right"><Button size="sm" variant="ghost" onClick={e => { e.stopPropagation(); nav('/admin/projects/' + p.id); }}>Edit →</Button></td>
@@ -647,7 +647,7 @@ function AllProjectsTable({ nav, role = 'admin' }) {
         <Card pad="p-0" className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] text-left border-collapse">
-              <thead><tr>{['Project', 'Clients', 'Template', 'Managers', 'Status', 'Updated', ''].map(h => <th key={h} className="py-4 px-5 border-b border-contrast font-bold text-[11px] uppercase tracking-widest text-ink-soft">{h}</th>)}</tr></thead>
+              <thead><tr>{['Project', 'Clients', 'Template', 'Managers', 'Status', 'Updated', ''].map(h => <th key={h} className="py-4 px-5 border-b border-contrast font-bold text-[14px] uppercase tracking-widest text-ink-soft">{h}</th>)}</tr></thead>
               <tbody>
               {visible.map(p => {
                 const cos = window.WODEN.getProjectClients(p);
@@ -656,12 +656,12 @@ function AllProjectsTable({ nav, role = 'admin' }) {
                 return (
                     <tr key={p.id} className="hover:bg-super-light-gray transition-colors">
                       <td className="py-4 px-5 border-b border-light-gray font-bold">{p.name}</td>
-                      <td className="py-4 px-5 border-b border-light-gray text-[13px]">
+                      <td className="py-4 px-5 border-b border-light-gray text-sm">
                         {cos[0] ? cos[0].name : '—'}
-                        {cos.length > 1 && <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded bg-light-gray text-[10px] font-mono text-ink-soft">+{cos.length - 1}</span>}
+                        {cos.length > 1 && <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded bg-light-gray text-[12px] font-mono text-ink-soft">+{cos.length - 1}</span>}
                       </td>
-                      <td className="py-4 px-5 border-b border-light-gray font-mono text-[11px] text-ink-soft uppercase">{tpl ? tpl.category : '—'}</td>
-                      <td className="py-4 px-5 border-b border-light-gray text-[13px] text-ink-soft">{mgrs.map(m => m.name).join(', ') || '—'}</td>
+                      <td className="py-4 px-5 border-b border-light-gray font-mono text-[14px] text-ink-soft uppercase">{tpl ? tpl.category : '—'}</td>
+                      <td className="py-4 px-5 border-b border-light-gray text-sm text-ink-soft">{mgrs.map(m => m.name).join(', ') || '—'}</td>
                       <td className="py-4 px-5 border-b border-light-gray"><Badge variant={p.status === 'published' ? 'accent' : p.status === 'review' ? 'soft' : 'default'}>{p.status}</Badge></td>
                       <td className="py-4 px-5 border-b border-light-gray text-ink-soft text-xs">{p.updated}</td>
                       <td className="py-4 px-5 border-b border-light-gray text-right">
@@ -719,8 +719,8 @@ function TemplatesPage() {
                   <Button size="sm" variant="ghost" className="px-2 py-1" onClick={() => setModal(t)}>Edit</Button>
                 </div>
                 <h3 className="text-lg font-bold mb-1.5">{t.name}</h3>
-                <p className="text-ink-soft text-[13px] leading-[1.6]">{t.description}</p>
-                <div className="mt-3 font-mono text-[10px] text-ink-faint">{window.WODEN.PROJECTS.filter(p => p.templateId === t.id).length} projects use this</div>
+                <p className="text-ink-soft text-sm leading-[1.6]">{t.description}</p>
+                <div className="mt-3 font-mono text-[12px] text-ink-faint">{window.WODEN.PROJECTS.filter(p => p.templateId === t.id).length} projects use this</div>
               </Card>
           ))}
         </div>
@@ -771,7 +771,7 @@ function StatsPage() {
                   <div key={i} className={`flex-1 rounded-t ${i === 11 ? 'bg-primary' : 'bg-contrast'}`} style={{height: (v * 12) + 'px'}} />
               ))}
             </div>
-            <div className="flex justify-between font-mono text-[10px] text-ink-soft mt-2"><span>JAN</span><span>DEC</span></div>
+            <div className="flex justify-between font-mono text-[12px] text-ink-soft mt-2"><span>JAN</span><span>DEC</span></div>
           </Card>
           <Card>
             <h3 className="text-lg font-bold mb-3">Chat sessions (last 30d)</h3>
@@ -854,10 +854,10 @@ function ClientEmployees({ nav }) {
                   <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shrink-0">{initials}</div>
                   <div className="flex-1 min-w-0">
                     <div className="font-bold truncate">{email.split('@')[0]}</div>
-                    <div className="font-mono text-ink-soft text-[11px] truncate">{email}</div>
+                    <div className="font-mono text-ink-soft text-[14px] truncate">{email}</div>
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {assigned.length === 0
-                        ? <span className="font-mono text-[10px] text-ink-faint uppercase">Not assigned to any project</span>
+                        ? <span className="font-mono text-[12px] text-ink-faint uppercase">Not assigned to any project</span>
                         : assigned.map(p => <Badge key={p.id} variant="soft">{p.name}</Badge>)
                       }
                     </div>
@@ -872,7 +872,7 @@ function ClientEmployees({ nav }) {
           {employees.length === 0 && (
               <Card pad="p-8" className="text-center">
                 <p className="text-ink-soft mb-1">No employees yet.</p>
-                <p className="font-mono text-[11px] text-ink-faint">Invite someone above to get started.</p>
+                <p className="font-mono text-[14px] text-ink-faint">Invite someone above to get started.</p>
               </Card>
           )}
         </div>

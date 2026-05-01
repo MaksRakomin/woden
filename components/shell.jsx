@@ -31,7 +31,7 @@ function Badge({ children, variant = 'default', className = '' }) {
     accent: "bg-primary text-black border-primary",
     soft: "bg-primary-bg-subtle text-secondary border-primary-bg-subtle"
   };
-  return <span className={`inline-block px-3 py-1 border rounded-full font-bold text-[11px] tracking-widest uppercase leading-tight ${variants[variant]} ${className}`}>{children}</span>;
+  return <span className={`inline-block px-3 py-1 border rounded-full font-bold text-[14px] tracking-widest uppercase leading-tight ${variants[variant]} ${className}`}>{children}</span>;
 }
 
 function Card({ children, className = '', pad = 'p-5' }) {
@@ -176,7 +176,7 @@ function SideNav({ role, route, nav, onLogout, mobileOpen, setMobileOpen }) {
           </div>
           <nav className="flex flex-col gap-1 p-4 flex-1 overflow-y-auto">
             {items.map((item, i) => {
-              if (item.section) return <div key={'s'+i} className="font-bold text-[10px] tracking-widest uppercase text-ink-faint px-3 pt-3 pb-1">{item.section}</div>;
+              if (item.section) return <div key={'s'+i} className="font-bold text-[12px] tracking-widest uppercase text-ink-faint px-3 pt-3 pb-1">{item.section}</div>;
               const [path, label, ico] = item;
               const active = route === path || route.startsWith(path + '/');
               return (
@@ -193,7 +193,7 @@ function SideNav({ role, route, nav, onLogout, mobileOpen, setMobileOpen }) {
                 <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs shrink-0">{user.initials}</div>
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-sm truncate">{user.name}</div>
-                  <div className="font-mono text-[10px] text-ink-faint uppercase tracking-wider">{roleLabels[role]}</div>
+                  <div className="font-mono text-[12px] text-ink-faint uppercase tracking-wider">{roleLabels[role]}</div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={onLogout} className="px-2 py-1">Out</Button>
               </div>
@@ -267,7 +267,7 @@ function RoleSwitcher({ role, setRole, nav, chatOpen }) {
                         <div className="w-10 h-10 rounded-full bg-contrast text-base flex items-center justify-center font-bold text-sm">{u.initials}</div>
                         <div className="flex-1">
                           <div className="font-bold text-sm">{u.name}</div>
-                          <div className="font-mono text-[10px] text-ink-faint tracking-wider">{label}</div>
+                          <div className="font-mono text-[12px] text-ink-faint tracking-wider">{label}</div>
                         </div>
                         {r === role && <Badge variant="accent">You</Badge>}
                       </div>
@@ -279,8 +279,8 @@ function RoleSwitcher({ role, setRole, nav, chatOpen }) {
         <button onClick={() => setOpen(!open)} className="flex items-center gap-2.5 pl-2 pr-4 py-2 bg-contrast text-base rounded-full border-2 border-contrast shadow-md hover:bg-primary hover:border-primary hover:text-black transition-colors text-left">
           <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm border-2 border-base">{user.initials}</div>
           <div>
-            <div className="font-bold text-[11px] leading-none mb-1 uppercase tracking-wider">{user.role.replace('_',' ')}</div>
-            <div className="font-mono text-[10px] text-primary-bg-subtle leading-none">tap to swap</div>
+            <div className="font-bold text-[14px] leading-none mb-1 uppercase tracking-wider">{user.role.replace('_',' ')}</div>
+            <div className="font-mono text-[12px] text-primary-bg-subtle leading-none">tap to swap</div>
           </div>
         </button>
       </div>
@@ -311,7 +311,7 @@ function MultiSelect({ options, value = [], onChange, placeholder = 'Select...',
           {selected.length === 0
             ? <span className="text-ink-faint flex-1">{placeholder}</span>
             : selected.map(o => (
-                <span key={o.id} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-contrast text-base text-[11px] font-bold uppercase tracking-wide">
+                <span key={o.id} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-contrast text-base text-[14px] font-bold uppercase tracking-wide">
                   {o.name}
                   {!disabled.includes(o.id) && (
                     <span className="opacity-60 hover:opacity-100 cursor-pointer leading-none" onClick={e => { e.stopPropagation(); toggle(o.id); }}>✕</span>
@@ -319,7 +319,7 @@ function MultiSelect({ options, value = [], onChange, placeholder = 'Select...',
                 </span>
               ))
           }
-          <span className="ml-auto text-ink-faint text-[10px] shrink-0">{open ? '▴' : '▾'}</span>
+          <span className="ml-auto text-ink-faint text-[12px] shrink-0">{open ? '▴' : '▾'}</span>
         </button>
 
         {open && (
@@ -331,7 +331,7 @@ function MultiSelect({ options, value = [], onChange, placeholder = 'Select...',
                     <button key={o.id} type="button" disabled={lock} onClick={() => toggle(o.id)}
                             className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors ${lock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-super-light-gray cursor-pointer'} ${sel ? 'bg-primary-bg-subtle' : ''}`}>
                       <span className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${sel ? 'bg-contrast border-contrast' : 'border-gray'}`}>
-                        {sel && <span className="text-base text-[10px] leading-none font-bold">✓</span>}
+                        {sel && <span className="text-base text-[12px] leading-none font-bold">✓</span>}
                       </span>
                       <span className={`flex-1 ${sel ? 'font-bold' : ''}`}>{o.name}</span>
                       {lock && <span className="font-mono text-[9px] text-ink-faint uppercase">locked</span>}
