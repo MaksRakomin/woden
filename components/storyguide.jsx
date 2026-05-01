@@ -2,6 +2,7 @@ const { useState: useSGState, useEffect: useSGEffect, useRef: useSGRef } = React
 
 // ─── Nav Definition ───────────────────────────────────────────────────────────
 const SG_NAV = [
+    { type: 'item', id: 'ai', icon: '⚡', label: 'AI Assistant' },
     { type: 'item', id: 'home', icon: '⬡', label: 'Home' },
     { type: 'group', id: 'sk', icon: '◈', label: 'StoryKernel', items: [{ id: 'sk-intro', label: 'Understanding the StoryKernel' }, { id: 'sk-full', label: '[CLIENT] StoryKernel', sub: true }] },
     { type: 'group', id: 'mh', icon: '◇', label: 'Messaging Hierarchy', items: [{ id: 'mh-intro', label: 'Understanding the Messaging Hierarchy' }, { id: 'mh-verbal', label: 'Verbal Identity', sub: true }, { id: 'mh-icp', label: 'ICP', sub: true }, { id: 'mh-values', label: 'Values', sub: true }, { id: 'mh-mission', label: 'Mission', sub: true }, { id: 'mh-pos', label: 'Positioning', sub: true }, { id: 'mh-diff', label: 'Differentiators', sub: true }, { id: 'mh-promise', label: 'Brand Promise', sub: true }, { id: 'mh-vision', label: 'Vision', sub: true }] },
@@ -26,7 +27,7 @@ function SgObjection({ q, a }) { return <div className="bg-base border border-li
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 function StoryGuide({ readOnly, search = '', onSearchChange }) {
-    const [page, setPage] = useSGState('home');
+    const [page, setPage] = useSGState('ai');
     const [openGroups, setOpenGroups] = useSGState({ sk: false, mh: false, cj: false, ng: false, app: false });
     const [navOpen, setNavOpen] = useSGState(false);
     const mainRef = useSGRef(null);
@@ -94,16 +95,22 @@ function StoryGuide({ readOnly, search = '', onSearchChange }) {
                     © 2025 Woden, Ltd. &amp; {EFC.client}
                 </div>
             </aside>
-            <main className="flex-1 overflow-y-auto min-w-0" ref={mainRef}>
-                <div className="md:hidden sticky top-0 z-30 bg-base border-b border-light-gray flex items-center gap-3 px-4 py-2.5">
+            <main className={`flex-1 min-w-0 flex flex-col ${page === 'ai' ? 'overflow-hidden' : 'overflow-y-auto'}`} ref={mainRef}>
+                <div className="md:hidden sticky top-0 z-30 bg-base border-b border-light-gray flex items-center gap-3 px-4 py-2.5 shrink-0">
                     <button onClick={() => setNavOpen(true)} className="w-9 h-9 flex items-center justify-center -ml-2 text-contrast hover:bg-super-light-gray rounded-lg" aria-label="Open sections">
                         <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
                     </button>
                     <div className="text-[12px] font-bold uppercase tracking-wider text-contrast">Sections</div>
                 </div>
-                <div className="max-w-[1240px] mx-auto px-4 py-5 md:px-8 md:py-8">
-                    <SGPage id={page} goPage={goPage} readOnly={readOnly} />
-                </div>
+                {page === 'ai' ? (
+                    <div className="flex-1 min-h-0 px-4 py-5 md:px-8 md:py-6 flex flex-col">
+                        <SGPage id={page} goPage={goPage} readOnly={readOnly} />
+                    </div>
+                ) : (
+                    <div className="max-w-[1240px] mx-auto px-4 py-5 md:px-8 md:py-8 w-full">
+                        <SGPage id={page} goPage={goPage} readOnly={readOnly} />
+                    </div>
+                )}
             </main>
         </div>
     );
@@ -111,6 +118,7 @@ function StoryGuide({ readOnly, search = '', onSearchChange }) {
 
 function SGPage({ id, goPage, readOnly }) {
     switch (id) {
+        case 'ai':           return <PageAI />;
         case 'home':         return <PageHome goPage={goPage} />;
         case 'sk-intro':     return <PageSkIntro />;
         case 'sk-full':      return <PageSkFull />;
@@ -144,6 +152,130 @@ function SGPage({ id, goPage, readOnly }) {
 }
 
 // ─── Pages ────────────────────────────────────────────────────────────────────
+
+function PageAI() {
+    const [messages, setMessages] = useSGState(() => { try { return JSON.parse(localStorage.getItem('wdn-efc-chat') || '[]'); } catch { return []; } });
+    const [input, setInput] = useSGState('');
+    const [typing, setTyping] = useSGState(false);
+    const bodyRef = useSGRef(null);
+    const inputRef = useSGRef(null);
+
+    useSGEffect(() => {
+        localStorage.setItem('wdn-efc-chat', JSON.stringify(messages));
+        if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+    }, [messages, typing]);
+
+    function send(text) {
+        const q = (text || input).trim(); if (!q) return;
+        setMessages(m => [...m, { id: Date.now(), role: 'user', content: q }]);
+        setInput(''); setTyping(true);
+        setTimeout(() => {
+            setMessages(m => [...m, { id: Date.now()+1, role: 'assistant', content: window.WODEN.mockEFCChatReply(q) }]);
+            setTyping(false);
+        }, 600 + Math.random() * 600);
+    }
+
+    const suggestions = window.WODEN.EFC_CHAT_SUGGESTIONS;
+
+    return (
+        <div className="flex flex-col h-full" style={{minHeight: 'calc(100vh - 120px)'}}>
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-light-gray shrink-0">
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-contrast flex items-center justify-center text-[16px] shrink-0">
+                        <span style={{color: '#f5c842'}}>⚡</span>
+                    </div>
+                    <div>
+                        <div className="font-bold text-[15px] text-contrast leading-tight">StoryEngine</div>
+                        <div className="text-[11px] text-ink-faint mt-0.5">AI Assistant · EFC International</div>
+                    </div>
+                </div>
+                {messages.length > 0 && (
+                    <button onClick={() => { setMessages([]); localStorage.removeItem('wdn-efc-chat'); }}
+                        className="text-[16px] text-primary hover:text-contrast transition-colors px-3 py-1.5 rounded-lg hover:bg-super-light-gray border border-transparent hover:border-light-gray font-sans">
+                        Clear chat
+                    </button>
+                )}
+            </div>
+
+            {/* Messages area */}
+            <div className="flex-1 overflow-y-auto flex flex-col" ref={bodyRef} style={{minHeight: 0}}>
+                {messages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center flex-1 px-4 py-8 text-center">
+                        <div className="w-14 h-14 rounded-2xl bg-contrast flex items-center justify-center text-[26px] mb-5 shadow-sm">
+                            <span style={{color: '#f5c842'}}>⚡</span>
+                        </div>
+                        <div className="text-[18px] font-extrabold text-contrast mb-2">How can I help you?</div>
+                        <div className="text-[13px] text-ink-soft max-w-[360px] leading-[1.65] mb-8">
+                            I'm StoryEngine — your AI guide through EFC's strategic narrative. Ask me anything about your brand story, messaging, or customer journey.
+                        </div>
+                        <div className="w-full max-w-[520px] grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {suggestions.map(s => (
+                                <button key={s} onClick={() => send(s)}
+                                    className="text-left px-4 py-3 border border-light-gray rounded-xl bg-base font-sans text-[12px] text-ink-soft hover:border-primary hover:text-contrast hover:shadow-sm transition-all leading-[1.5]">
+                                    {s}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-4 py-2 pb-4 max-w-[720px] w-full mx-auto px-1">
+                        {messages.map(m => (
+                            <div key={m.id} className={`flex gap-3 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                                {m.role === 'assistant' && (
+                                    <div className="w-7 h-7 rounded-lg bg-contrast flex items-center justify-center text-[12px] shrink-0 mt-0.5">
+                                        <span style={{color: '#f5c842'}}>⚡</span>
+                                    </div>
+                                )}
+                                <div className={`max-w-[78%] px-4 py-3 rounded-2xl text-[13px] leading-[1.65] whitespace-pre-wrap
+                                    ${m.role === 'user'
+                                        ? 'bg-contrast text-base rounded-tr-sm'
+                                        : 'bg-super-light-gray text-contrast rounded-tl-sm border border-light-gray'}`}>
+                                    {m.content}
+                                </div>
+                            </div>
+                        ))}
+                        {typing && (
+                            <div className="flex gap-3 flex-row">
+                                <div className="w-7 h-7 rounded-lg bg-contrast flex items-center justify-center text-[12px] shrink-0 mt-0.5">
+                                    <span style={{color: '#f5c842'}}>⚡</span>
+                                </div>
+                                <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-super-light-gray border border-light-gray inline-flex gap-1 items-center">
+                                    <span className="w-[6px] h-[6px] rounded-full bg-ink-faint animate-[bounce-dots_1s_infinite]"/>
+                                    <span className="w-[6px] h-[6px] rounded-full bg-ink-faint animate-[bounce-dots_1s_infinite_0.15s]"/>
+                                    <span className="w-[6px] h-[6px] rounded-full bg-ink-faint animate-[bounce-dots_1s_infinite_0.3s]"/>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Input */}
+            <div className="pt-4 mt-2 border-t border-light-gray shrink-0">
+                <div className="max-w-[720px] mx-auto">
+                    <div className="flex gap-2 items-end bg-base border border-light-gray rounded-2xl px-4 py-3 focus-within:border-contrast transition-colors shadow-sm">
+                        <textarea rows={1} value={input} ref={inputRef}
+                            placeholder="Ask anything about your brand story..."
+                            onChange={e => setInput(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+                            className="flex-1 resize-none min-h-[22px] max-h-[120px] text-[13px] font-sans bg-transparent outline-none text-contrast placeholder:text-ink-faint" />
+                        <button onClick={() => send()}
+                            disabled={!input.trim()}
+                            className="w-8 h-8 rounded-xl bg-contrast border-none text-base cursor-pointer text-[13px] shrink-0 flex items-center justify-center transition-all hover:opacity-80 disabled:opacity-30 disabled:cursor-default">
+                            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-white" style={{transform:'rotate(90deg)'}}>
+                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div className="text-center text-[10px] text-ink-faint mt-2">
+                        Responses are simulated · StoryEngine AI · EFC International
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 function PageHome({ goPage }) {
     const [messages, setMessages] = useSGState(() => { try { return JSON.parse(localStorage.getItem('wdn-efc-chat') || '[]'); } catch { return []; } });
@@ -189,25 +321,22 @@ function PageHome({ goPage }) {
 
             {/* StoryEngine chat */}
             <div className="bg-base border border-light-gray rounded-xl flex flex-col overflow-hidden h-[70vh] sm:h-[500px]">
-                {/* Chat header */}
                 <div className="px-5 py-3.5 border-b border-light-gray flex items-center gap-3 bg-contrast rounded-t-xl shrink-0">
                     <div className="min-w-0">
                         <div className="font-bold text-[14px] text-base flex items-center gap-1.5 truncate">
-                            <span style={{color: '#f5c842'}}>⚡</span> StoryEngine
+                            StoryEngine
                         </div>
-                        <div className="text-[10px] text-white/40 uppercase tracking-[0.08em] mt-0.5 truncate">
+                        <div className="text-[10px] text-white uppercase tracking-[0.08em] mt-0.5 truncate">
                             EFC International · AI Assistant (Simulated)
                         </div>
                     </div>
                     {messages.length > 0 && (
                         <button onClick={() => { setMessages([]); localStorage.removeItem('wdn-efc-chat'); }}
-                            className="ml-auto shrink-0 bg-transparent border-none text-white/40 hover:text-white/70 text-xs cursor-pointer transition-colors">
+                            className="ml-auto shrink-0 bg-transparent border-none text-primary hover:text-white/70 text-xs cursor-pointer transition-colors">
                             Clear
                         </button>
                     )}
                 </div>
-
-                {/* Messages */}
                 <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-2.5" ref={bodyRef}>
                     {messages.length === 0 && (
                         <div>
@@ -241,8 +370,6 @@ function PageHome({ goPage }) {
                         </div>
                     )}
                 </div>
-
-                {/* Input */}
                 <div className="px-4 py-3 border-t border-light-gray flex gap-2 items-end bg-base shrink-0">
                     <textarea rows={1} value={input}
                         placeholder="Ask anything about your brand story..."
