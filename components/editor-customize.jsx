@@ -461,15 +461,22 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
 
   const [flowStep, setFlowStep] = useStateE(1);
   const [content, setContent] = useStateE(project.content || '');
-  const [palette, setPalette] = useStateE(() => {
+  const [brandColors, setBrandColors] = useStateE(() => {
     if (Array.isArray(project.palette) && project.palette.length) {
-      const match = PALETTES.find(p => JSON.stringify(p.colors) === JSON.stringify(project.palette));
-      if (match) return match.id;
+      // New format: array of {hex, role} objects
+      if (project.palette[0] && typeof project.palette[0] === 'object' && project.palette[0].hex) {
+        return project.palette;
+      }
+      // Legacy format: flat array of hex strings — migrate to named roles
+      const defaultRoles = ['primary', 'secondary', 'accent', 'background'];
+      return project.palette.map((hex, i) => ({ hex, role: defaultRoles[i] || 'custom' }));
     }
-    return PALETTES[0].id;
+    return [
+      { hex: '#131215', role: 'primary' },
+      { hex: '#FFFFFF', role: 'background' },
+    ];
   });
   const [description, setDescription] = useStateE(project.description || '');
-  const [preprompt, setPreprompt] = useStateE(project.preprompt || '');
   const [logo, setLogo] = useStateE(project.logo || null);
   const [team, setTeam] = useStateE(Array.isArray(project.team) ? [...project.team] : []);
   const [inviteEmail, setInviteEmail] = useStateE('');
@@ -482,9 +489,8 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
   const persist = () => {
     project.content = content;
     project.description = description;
-    project.preprompt = preprompt;
     project.logo = logo;
-    project.palette = PALETTES.find(p => p.id === palette)?.colors || [];
+    project.palette = brandColors;
     project.team = team;
     project.updated = 'just now';
   };
@@ -508,7 +514,6 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
       const out = aiAutofillFromContent({ content, project, template: tpl });
       setDescription(out.description);
       if (PALETTES.find(p => p.id === out.paletteId)) setPalette(out.paletteId);
-      setPreprompt(out.preprompt);
       setAiBusy(false);
       toast('Auto-filled from project content ✨');
     }, 600 + Math.random() * 500);
@@ -604,15 +609,85 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
 
               <Card pad="p-5 sm:p-7">
                 <h3 className="text-lg font-bold mb-1">Brand palette</h3>
-                <p className="text-ink-soft text-[13px] mb-5">Choose the colour set that best fits this client's identity. You can refine it later.</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-1">
-                  {PALETTES.map(p => (
-                      <div key={p.id} className={`border-2 rounded-xl p-3 cursor-pointer transition-all outline outline-2 outline-offset-1 ${palette === p.id ? 'border-contrast outline-contrast bg-paper-warm' : 'border-light-gray outline-transparent hover:border-ink-faint'}`} onClick={() => setPalette(p.id)}>
-                        <div className="flex rounded-md overflow-hidden mb-2.5">{p.colors.map((c, i) => <div key={i} className="flex-1 h-10" style={{background: c}} />)}</div>
-                        <div className={`text-xs text-contrast ${palette === p.id ? 'font-bold' : 'font-semibold'}`}>{p.name}</div>
+                <p className="text-ink-soft text-[13px] mb-5">Define the colours that make up this client's identity.</p>
+
+                {/* Preview strip */}
+                {brandColors.length > 0 && (
+                    <div className="flex rounded-xl overflow-hidden mb-6 h-12 border border-light-gray shadow-sm">
+                      {brandColors.map((c, i) => (
+                          <div key={i} className="flex-1 transition-all" style={{background: c.hex}} title={`${c.role}: ${c.hex}`} />
+                      ))}
+                    </div>
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                  {brandColors.map((color, idx) => (
+                      <div key={idx} className="group flex items-center gap-3 px-3 py-2.5 rounded-xl border border-light-gray bg-base hover:border-ink-faint transition-colors">
+                        {/* Colour swatch + native picker */}
+                        <label className="relative shrink-0 cursor-pointer" title="Pick colour">
+                          <div className="w-8 h-8 rounded-lg border border-black/10 shadow-sm transition-transform group-hover:scale-105" style={{background: color.hex}} />
+                          <input type="color" value={color.hex} onChange={e => {
+                            const updated = [...brandColors];
+                            updated[idx] = { ...updated[idx], hex: e.target.value };
+                            setBrandColors(updated);
+                          }} className="opacity-0 absolute inset-0 w-full h-full cursor-pointer" />
+                        </label>
+
+                        {/* Hex text input */}
+                        <input
+                            type="text"
+                            value={color.hex}
+                            maxLength={7}
+                            onChange={e => {
+                              const v = e.target.value;
+                              if (/^#[0-9A-Fa-f]{0,6}$/.test(v)) {
+                                const updated = [...brandColors];
+                                updated[idx] = { ...updated[idx], hex: v };
+                                setBrandColors(updated);
+                              }
+                            }}
+                            className="w-[6.5rem] px-2 py-1 rounded-md bg-super-light-gray text-contrast text-[12px] font-mono tracking-wide border-0 focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+
+                        {/* Role badge / dropdown */}
+                        <select
+                            value={color.role}
+                            onChange={e => {
+                              const updated = [...brandColors];
+                              updated[idx] = { ...updated[idx], role: e.target.value };
+                              setBrandColors(updated);
+                            }}
+                            className="flex-1 px-2 py-1 rounded-md bg-super-light-gray text-contrast text-[12px] font-medium border-0 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer appearance-none"
+                        >
+                          <option value="primary">Primary</option>
+                          <option value="secondary">Secondary</option>
+                          <option value="accent">Accent</option>
+                          <option value="background">Background</option>
+                          <option value="surface">Surface</option>
+                          <option value="text">Text</option>
+                          <option value="border">Border</option>
+                          <option value="custom">Custom</option>
+                        </select>
+
+                        {/* Remove — only visible on hover */}
+                        <button
+                            type="button"
+                            onClick={() => setBrandColors(brandColors.filter((_, i) => i !== idx))}
+                            className={`w-6 h-6 flex items-center justify-center rounded-full text-ink-faint hover:text-contrast hover:bg-light-gray transition-all text-base leading-none shrink-0 ${brandColors.length > 1 ? 'opacity-0 group-hover:opacity-100' : 'invisible'}`}
+                            aria-label="Remove colour"
+                        >×</button>
                       </div>
                   ))}
                 </div>
+
+                <button
+                    type="button"
+                    onClick={() => setBrandColors([...brandColors, { hex: '#8B8B8B', role: 'custom' }])}
+                    className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-light-gray text-[12px] font-medium text-ink-soft hover:text-contrast hover:border-ink-faint transition-colors w-full justify-center"
+                >
+                  <span className="text-base leading-none">+</span>
+                  Add colour
+                </button>
               </Card>
 
               <Card pad="p-5 sm:p-7">
@@ -626,13 +701,6 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
                   <Button size="sm" variant="ghost" onClick={() => fileRef.current && fileRef.current.click()}>{logo ? 'Replace' : 'Upload logo'}</Button>
                   {logo && <Button size="sm" variant="ghost" onClick={() => setLogo(null)}>Remove</Button>}
                 </div>
-              </Card>
-
-              <Card pad="p-5 sm:p-7">
-                <h3 className="text-lg font-bold mb-1">Pre-prompt</h3>
-                <p className="text-ink-soft text-[13px] mb-3.5">Extra instructions appended to the base StoryGuide generation prompt. Use to capture company-specific tone, audience, or constraints. The base prompt is defined on the server.</p>
-                <textarea className="w-full px-3.5 py-2.5 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus font-mono" rows={5} placeholder={"e.g. The brand serves enterprise SaaS buyers in regulated industries. Avoid casual tone. Emphasise compliance, audit trails, predictability."} value={preprompt} onChange={e => setPreprompt(e.target.value)} />
-                <div className="font-mono text-[10px] text-ink-faint mt-1.5">{preprompt.length} chars</div>
               </Card>
             </div>
         )}
