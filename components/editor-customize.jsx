@@ -456,6 +456,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
   }
 
   const isClient = role === 'client';
+  const canManageTeam = role === 'client' || role === 'admin' || role === 'manager';
   const lastStep = 3;
 
   const [flowStep, setFlowStep] = useStateE(1);
@@ -572,7 +573,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
             </>}
             {flowStep === 3 && <>
               <Button variant="ghost" onClick={() => goStep(2)}>← Back</Button>
-              <Button variant="primary" onClick={generate}>{isClient ? 'Save project' : 'Generate project ✓'}</Button>
+              <Button variant="primary" onClick={generate}>{isClient ? 'Save Story Guide' : 'Generate Story Guide ✓'}</Button>
             </>}
           </div>
         </div>
@@ -642,12 +643,12 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
                 <div className="flex justify-between items-start gap-3 flex-wrap mb-3">
                   <div>
                     <h3 className="text-lg font-bold mb-1">Assigned employees</h3>
-                    <p className="text-ink-soft text-[13px] m-0">{isClient ? "Add colleagues from your company who should be able to preview this StoryGuide. They'll see it as read-only." : 'Employees assigned to this project by the client.'}</p>
+                    <p className="text-ink-soft text-[13px] m-0">{canManageTeam ? "Add colleagues who should be able to preview this StoryGuide. They'll see it as read-only." : 'Employees assigned to this project.'}</p>
                   </div>
                   <Badge>{team.length} member{team.length === 1 ? '' : 's'}</Badge>
                 </div>
 
-                {isClient && (
+                {canManageTeam && (
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-5">
                       <Input placeholder="name@company.co" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTeamMember()} className="flex-1" />
                       <Button variant="primary" onClick={addTeamMember}>Add to project</Button>
@@ -657,7 +658,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
                 {team.length === 0 ? (
                     <div className="text-center py-8 border border-dashed border-light-gray rounded-lg">
                       <p className="text-ink-faint font-mono text-[11px] uppercase tracking-wider mb-1">No employees yet</p>
-                      <p className="text-ink-soft text-[13px] m-0">{isClient ? 'Add an email above to assign your first team member.' : 'No employees have been assigned by the client.'}</p>
+                      <p className="text-ink-soft text-[13px] m-0">{canManageTeam ? 'Add an email above to assign your first team member.' : 'No employees have been assigned yet.'}</p>
                     </div>
                 ) : (
                     <div className="flex flex-col gap-2">
@@ -669,7 +670,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
                               <div className="font-mono text-ink-soft text-[11px] truncate">{em}</div>
                             </div>
                             <Badge>{i === 0 ? 'Active' : 'Invited'}</Badge>
-                            {isClient && <Button size="sm" variant="ghost" className="shrink-0" onClick={() => removeTeamMember(em)}>Remove</Button>}
+                            {canManageTeam && <Button size="sm" variant="ghost" className="shrink-0" onClick={() => removeTeamMember(em)}>Remove</Button>}
                           </div>
                       ))}
                     </div>
