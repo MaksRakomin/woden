@@ -78,7 +78,7 @@ function StoryGuide({ readOnly, search = '', onSearchChange }) {
                                     if (!matchesSearch(item.label) && !matchesSearch(entry.label)) return null;
                                     return (
                                         <button key={item.id} onClick={() => goPage(item.id)}
-                                            className={`w-full text-left flex items-center gap-2 py-1.5 text-[13px] font-sans truncate transition-colors
+                                            className={`w-full text-left flex items-start gap-2 py-1.5 pr-2 text-[13px] font-sans transition-colors
                                                 ${item.sub2 ? 'pl-10 text-[11px] text-ink-faint' : 'pl-7'}
                                                 ${page === item.id ? 'text-primary font-semibold bg-primary-bg-subtle' : 'text-ink-soft hover:bg-super-light-gray hover:text-contrast'}`}>
                                             {item.sub2 ? <span className="text-ink-faint mr-0.5">↳</span> : null}
