@@ -389,7 +389,6 @@ function ClientDash({ nav }) {
                 <h3 className="text-xl font-bold mb-4">{p.name}</h3>
                 <div className="flex gap-2 flex-wrap">
                   <Button size="sm" onClick={e => { e.stopPropagation(); nav('/preview/' + p.id); }}>Preview</Button>
-                  <Button size="sm" variant="ghost" onClick={e => { e.stopPropagation(); nav('/client/projects/' + p.id + '/edit'); }}>Edit</Button>
                 </div>
               </Card>
           ))}
