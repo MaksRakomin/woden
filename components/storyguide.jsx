@@ -19,7 +19,7 @@ function SgHead({ label, title }) { return <div className="mb-5"><div className=
 function SgBody({ children, className='' }) { return <p className={`text-[14px] leading-[1.7] text-ink-soft mb-4 ${className}`}>{children}</p>; }
 function SgCallout({ children }) { return <div className="border-l-4 border-primary bg-primary-bg-subtle p-4 pr-5 rounded-r-[10px] italic text-[17px] leading-[1.6] text-contrast my-4">{children}</div>; }
 function SgCard({ label, children, className='' }) { return <div className={`bg-base border border-light-gray rounded-xl p-5 mb-3.5 shadow-sm ${className}`}>{label && <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-ink-faint mb-2.5">{label}</div>}{children}</div>; }
-function SgSectionH({ children }) { return <h3 className="text-base font-bold text-contrast mt-6 mb-3">{children}</h3>; }
+function SgSectionH({ children }) { return <h3 className="text-base font-bold text-black mt-6 mb-3">{children}</h3>; }
 function SgInfoBanner({ arcs }) { return <div className="bg-super-light-gray border border-light-gray rounded-lg px-3.5 py-2 text-xs text-ink-soft mb-4 flex flex-wrap gap-1.5 items-center"><strong className="text-contrast">StoryKernel Arc:</strong>{arcs.map(a => <span key={a} className="inline-block px-2 py-0.5 rounded-[5px] text-[11px] font-medium bg-primary-bg-subtle text-secondary">{a}</span>)}</div>; }
 function SgMsgPoint({ text, personas }) { return <div className="bg-super-light-gray border border-light-gray rounded-lg p-3 mb-2"><div className="text-[13px] text-ink-soft leading-[1.6] mb-1.5">{text}</div>{personas?.map(p => <span key={p} className="inline-block px-2 py-0.5 rounded-[5px] text-[11px] font-medium bg-light-gray text-ink-soft mr-1">{p}</span>)}</div>; }
 function SgObjection({ q, a }) { return <div className="bg-base border border-light-gray rounded-[10px] p-3.5 mb-2.5"><div className="text-[13px] font-semibold text-contrast mb-1.5 before:content-['\201C'] before:mr-0.5 before:text-primary">{q}</div><div className="text-[13px] text-ink-soft leading-[1.6]">{a}</div></div>; }
@@ -217,7 +217,7 @@ function PageHome({ goPage }) {
                             <div className="flex flex-col gap-1.5">
                                 {window.WODEN.EFC_CHAT_SUGGESTIONS.map(s => (
                                     <button key={s} onClick={() => send(s)}
-                                        className="text-left px-3.5 py-2 border border-light-gray rounded-[18px] bg-base font-sans text-[12px] cursor-pointer transition-colors text-ink-soft hover:bg-contrast hover:text-base hover:border-contrast">
+                                        className="text-left px-3.5 py-2 border border-light-gray rounded-[18px] bg-base font-sans text-[12px] cursor-pointer transition-colors text-ink-soft hover:bg-contrast hover:text-white hover:border-contrast">
                                         {s}
                                     </button>
                                 ))}
@@ -358,7 +358,7 @@ function PageCjIntro({ goPage }) {
                     ['cj-cx',         'Customer Experience', 'Great customer experience is about keeping the promises made through the first three phases.'],
                     ['cj-evangelism', 'Evangelism',          'When EFC keeps its promises, customers become champions.'],
                 ].map(([id, title, desc]) => (
-                    <button key={id} className="bg-base border border-light-gray rounded-xl p-4.5 text-left transition-all hover:border-primary hover:shadow-sm w-full font-sans" onClick={() => goPage(id)}>
+                    <button key={id} className="bg-base border border-light-gray rounded-xl p-4 text-left transition-all hover:border-primary hover:shadow-sm w-full font-sans" onClick={() => goPage(id)}>
                         <div className="font-bold text-[14px] text-contrast mb-1">{title}</div>
                         <div className="text-[12px] text-ink-faint leading-[1.6]">{desc}</div>
                     </button>
