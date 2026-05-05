@@ -2,7 +2,7 @@ const { useState: useSGState, useEffect: useSGEffect, useRef: useSGRef } = React
 
 // ─── Nav Definition ───────────────────────────────────────────────────────────
 const SG_NAV = [
-    { type: 'item', id: 'ai', icon: '⚡', label: 'AI Assistant' },
+    { type: 'item', id: 'ai', icon: '⚡', label: 'StoryEngine' },
     { type: 'item', id: 'home', icon: '⬡', label: 'Home' },
     { type: 'group', id: 'sk', icon: '◈', label: 'StoryKernel', items: [{ id: 'sk-intro', label: 'Understanding the StoryKernel' }, { id: 'sk-full', label: '[CLIENT] StoryKernel', sub: true }] },
     { type: 'group', id: 'mh', icon: '◇', label: 'Messaging Hierarchy', items: [{ id: 'mh-intro', label: 'Understanding the Messaging Hierarchy' }, { id: 'mh-verbal', label: 'Verbal Identity', sub: true }, { id: 'mh-icp', label: 'ICP', sub: true }, { id: 'mh-values', label: 'Values', sub: true }, { id: 'mh-mission', label: 'Mission', sub: true }, { id: 'mh-pos', label: 'Positioning', sub: true }, { id: 'mh-diff', label: 'Differentiators', sub: true }, { id: 'mh-promise', label: 'Brand Promise', sub: true }, { id: 'mh-vision', label: 'Vision', sub: true }] },
@@ -187,7 +187,7 @@ function PageAI() {
                     </div>
                     <div>
                         <div className="font-bold text-[15px] text-contrast leading-tight">StoryEngine</div>
-                        <div className="text-[14px] text-ink-faint mt-0.5">AI Assistant · EFC International</div>
+                        <div className="text-[14px] text-ink-faint mt-0.5">StoryEngine · EFC International</div>
                     </div>
                 </div>
                 {messages.length > 0 && (
@@ -327,7 +327,7 @@ function PageHome({ goPage }) {
                             StoryEngine
                         </div>
                         <div className="text-sm text-white uppercase tracking-[0.08em] mt-0.5 truncate">
-                            EFC International · AI Assistant (Simulated)
+                            EFC International · StoryEngine (Simulated)
                         </div>
                     </div>
                     {messages.length > 0 && (

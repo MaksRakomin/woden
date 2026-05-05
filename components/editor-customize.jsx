@@ -461,6 +461,10 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
 
   const [flowStep, setFlowStep] = useStateE(1);
   const [content, setContent] = useStateE(project.content || '');
+  const [brandFonts, setBrandFonts] = useStateE(() => ({
+    heading: project.fonts?.heading || 'gt-pressura',
+    body: project.fonts?.body || 'system',
+  }));
   const [brandColors, setBrandColors] = useStateE(() => {
     if (Array.isArray(project.palette) && project.palette.length) {
       // New format: array of {hex, role} objects
@@ -491,6 +495,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
     project.description = description;
     project.logo = logo;
     project.palette = brandColors;
+    project.fonts = brandFonts;
     project.team = team;
     project.updated = 'just now';
   };
@@ -688,6 +693,54 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
                   <span className="text-base leading-none">+</span>
                   Add colour
                 </button>
+              </Card>
+
+              <Card pad="p-5 sm:p-7">
+                <h3 className="text-lg font-bold mb-1">Brand typography</h3>
+                <p className="text-ink-soft text-sm mb-5">Choose the typefaces used across this client's StoryGuide.</p>
+
+                {(() => {
+                  const FONT_OPTIONS = [
+                    { id: 'gt-pressura',   label: 'GT Pressura',      stack: "'GT Pressura', system-ui, sans-serif",    tag: 'Brand' },
+                    { id: 'inter',         label: 'Inter',             stack: "'Inter', system-ui, sans-serif",          tag: 'Sans-serif' },
+                    { id: 'system',        label: 'System UI',         stack: "system-ui, -apple-system, sans-serif",    tag: 'Sans-serif' },
+                    { id: 'georgia',       label: 'Georgia',           stack: "Georgia, 'Times New Roman', serif",       tag: 'Serif' },
+                    { id: 'playfair',      label: 'Playfair Display',  stack: "'Playfair Display', Georgia, serif",      tag: 'Serif' },
+                    { id: 'dm-serif',      label: 'DM Serif Display',  stack: "'DM Serif Display', Georgia, serif",      tag: 'Serif' },
+                    { id: 'source-serif',  label: 'Source Serif 4',    stack: "'Source Serif 4', Georgia, serif",        tag: 'Serif' },
+                    { id: 'mono',          label: 'SF Mono',           stack: "'SF Mono', 'Fira Code', ui-monospace, monospace", tag: 'Mono' },
+                  ];
+                  const PREVIEW = 'The quick brown fox';
+                  const FontRow = ({ role, label }) => {
+                    const current = FONT_OPTIONS.find(f => f.id === brandFonts[role]) || FONT_OPTIONS[0];
+                    return (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[12px] font-mono uppercase tracking-widest text-ink-faint">{label}</span>
+                          <span className="text-[11px] font-mono text-ink-faint">{current.tag}</span>
+                        </div>
+                        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-light-gray bg-base">
+                          <span className="flex-1 text-[22px] leading-tight truncate" style={{fontFamily: current.stack}}>{PREVIEW}</span>
+                          <select
+                            value={brandFonts[role]}
+                            onChange={e => setBrandFonts(prev => ({ ...prev, [role]: e.target.value }))}
+                            className="shrink-0 px-2 py-1 rounded-md bg-super-light-gray text-contrast text-[12px] font-medium border-0 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer appearance-none"
+                          >
+                            {FONT_OPTIONS.map(f => (
+                              <option key={f.id} value={f.id}>{f.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    );
+                  };
+                  return (
+                    <div className="flex flex-col gap-4">
+                      <FontRow role="heading" label="Heading font" />
+                      <FontRow role="body"    label="Body font" />
+                    </div>
+                  );
+                })()}
               </Card>
 
               <Card pad="p-5 sm:p-7">
