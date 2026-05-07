@@ -1,5 +1,10 @@
 const { useState: useStateE, useRef: useRefE, useEffect: useEffectE } = React;
 
+// NOTE: WYSIWYGEditor below is intentionally preserved but currently UNUSED.
+// The editor flow was restored to a 14-section wizard (steps 1–14) plus Brand
+// (step 15) and Team (step 16). The TinyMCE component remains in the file so it
+// can be re-enabled later without re-implementing the .docx pipeline.
+
 const TEMPLATE_DOCX_URL = './assets/docs/template.docx';
 
 // Wait for `window.tinymce` and `window.mammoth` to become available.
@@ -396,6 +401,108 @@ function WYSIWYGEditor({ sectionN, title, content, onChange }) {
   );
 }
 
+// ── 14-section wizard field schema ───────────────────────────────────────
+// Field ids are stable (camelCase) so persisted data survives label edits.
+// Steps 1–6 have curated fields; 7–14 fall back to a generic content + notes
+// pair. Persisted under project.sectionData = { [stepNumber]: { [fieldId]: value } }.
+const SECTION_FIELDS = {
+  1: [
+    { id: 'clientName',  label: 'Client name',     kind: 'input',    placeholder: 'Meridian Coffee Co.' },
+    { id: 'tagline',     label: 'Tagline',         kind: 'input',    placeholder: 'Coffee with conviction.' },
+    { id: 'preparedBy',  label: 'Prepared by',     kind: 'input',    placeholder: 'Woden' },
+    { id: 'version',     label: 'Version',         kind: 'input',    placeholder: '1.3' },
+    { id: 'logoSlot',    label: 'Logo',            kind: 'logo' },
+  ],
+  2: [
+    { id: 'origin',      label: 'Origin',          kind: 'textarea', placeholder: 'In 2014, a barista named Ana…' },
+    { id: 'conflict',    label: 'Conflict',        kind: 'textarea', placeholder: 'Three farmers. Seven middlemen…' },
+    { id: 'resolution',  label: 'Resolution',      kind: 'textarea', placeholder: 'Meridian began as a single direct-trade relationship…' },
+  ],
+  3: [
+    { id: 'mission',     label: 'Mission',         kind: 'textarea', placeholder: 'To connect growers and drinkers…' },
+    { id: 'vision',      label: 'Vision',          kind: 'textarea', placeholder: 'A coffee industry where every cup traces…' },
+  ],
+  4: [
+    { id: 'p1Name',      label: 'Persona 1 name',  kind: 'input',    placeholder: 'Conscious Casey' },
+    { id: 'p1Quote',     label: 'Persona 1 quote', kind: 'input',    placeholder: 'I want to know where my money actually goes.' },
+    { id: 'p2Name',      label: 'Persona 2 name',  kind: 'input',    placeholder: 'Office Owen' },
+    { id: 'p2Quote',     label: 'Persona 2 quote', kind: 'input',    placeholder: 'I buy coffee for 50 people…' },
+  ],
+  5: [
+    { id: 'positioning', label: 'Positioning statement', kind: 'textarea', placeholder: 'For people who care where their coffee comes from, Meridian is the specialty roaster that names every farmer on every bag…' },
+  ],
+  6: [
+    { id: 'pillar1',     label: 'Pillar 1',        kind: 'input',    placeholder: 'Transparent' },
+    { id: 'pillar2',     label: 'Pillar 2',        kind: 'input',    placeholder: 'Rigorous' },
+    { id: 'pillar3',     label: 'Pillar 3',        kind: 'input',    placeholder: 'Warm' },
+    { id: 'pillar4',     label: 'Pillar 4',        kind: 'input',    placeholder: 'Curious' },
+  ],
+};
+const GENERIC_FIELDS = [
+  { id: 'content', label: 'Content', kind: 'textarea', placeholder: 'Fill this section…' },
+  { id: 'notes',   label: 'Notes',   kind: 'textarea', placeholder: '' },
+];
+function getSectionFields(step) { return SECTION_FIELDS[step] || GENERIC_FIELDS; }
+
+// Renders one section's form. `values` is the per-step object from sectionData;
+// `onField(fieldId, value)` propagates a single field change up to the parent.
+function SectionForm({ step, values, onField, logo, onLogoFile }) {
+  const fields = getSectionFields(step);
+  return (
+    <div className="flex flex-col gap-4">
+      {fields.map((f) => {
+        const v = values[f.id] || '';
+        if (f.kind === 'input') {
+          return (
+            <div key={f.id} className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-mono uppercase tracking-widest text-ink-faint">{f.label}</label>
+              <input
+                className="w-full px-3.5 py-2.5 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus"
+                placeholder={f.placeholder}
+                value={v}
+                onChange={(e) => onField(f.id, e.target.value)}
+              />
+            </div>
+          );
+        }
+        if (f.kind === 'textarea') {
+          return (
+            <div key={f.id} className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-mono uppercase tracking-widest text-ink-faint">{f.label}</label>
+              <textarea
+                className="w-full px-3.5 py-2.5 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus"
+                rows={4}
+                placeholder={f.placeholder}
+                value={v}
+                onChange={(e) => onField(f.id, e.target.value)}
+              />
+            </div>
+          );
+        }
+        if (f.kind === 'logo') {
+          return (
+            <div key={f.id} className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-mono uppercase tracking-widest text-ink-faint">{f.label}</label>
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="w-20 h-20 rounded-xl border border-light-gray bg-paper-warm flex items-center justify-center overflow-hidden shrink-0">
+                  {logo
+                    ? <img src={logo} alt="Logo preview" className="max-w-full max-h-full object-contain" />
+                    : <span className="text-ink-faint font-mono text-[12px] uppercase">No logo</span>}
+                </div>
+                <label className="px-3 py-2 rounded-lg border border-light-gray text-sm cursor-pointer hover:border-contrast transition-colors">
+                  <input type="file" accept="image/*" className="hidden" onChange={onLogoFile} />
+                  {logo ? 'Replace' : 'Upload logo'}
+                </label>
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })}
+    </div>
+  );
+}
+
 const PALETTES = [
   { id: 'espresso', name: 'Espresso',  colors: ['#3B2A1F', '#E8D5B7', '#D4572A', '#F7F1E5'] },
   { id: 'slate',    name: 'Slate',     colors: ['#1C2B3A', '#C8D8E8', '#3A7CA5', '#F4F7FA'] },
@@ -457,10 +564,25 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
 
   const isClient = role === 'client';
   const canManageTeam = role === 'client' || role === 'admin' || role === 'manager';
-  const lastStep = 3;
+  // 14 wizard sections + Brand (15) + Team (16)
+  const SECTION_TITLES = window.WODEN.SECTION_TITLES;
+  const SECTION_COUNT = SECTION_TITLES.length; // 14
+  const BRAND_STEP = SECTION_COUNT + 1;        // 15
+  const TEAM_STEP  = SECTION_COUNT + 2;        // 16
+  const lastStep = TEAM_STEP;
 
   const [flowStep, setFlowStep] = useStateE(1);
   const [content, setContent] = useStateE(project.content || '');
+  // Per-section form values: { [stepNumber]: { [fieldId]: value } }
+  const [sectionData, setSectionData] = useStateE(() => {
+    const seed = (project.sectionData && typeof project.sectionData === 'object') ? project.sectionData : {};
+    const out = {};
+    for (let s = 1; s <= SECTION_COUNT; s++) out[s] = { ...(seed[s] || {}) };
+    return out;
+  });
+  const setSectionField = (step, fieldId, value) => {
+    setSectionData((prev) => ({ ...prev, [step]: { ...(prev[step] || {}), [fieldId]: value } }));
+  };
   const [brandFonts, setBrandFonts] = useStateE(() => ({
     heading: project.fonts?.heading || 'gt-pressura',
     body: project.fonts?.body || 'system',
@@ -492,6 +614,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
 
   const persist = () => {
     project.content = content;
+    project.sectionData = sectionData;
     project.description = description;
     project.logo = logo;
     project.palette = brandColors;
@@ -542,12 +665,41 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
 
   const goStep = (n) => { persist(); setFlowStep(n); };
 
-  const StepBtn = ({ n, label }) => (
-      <button type="button" onClick={() => goStep(n)} className={`group flex items-center gap-2 text-sm font-medium rounded-full pr-2 pl-1 py-0.5 transition-colors hover:bg-super-light-gray ${flowStep >= n ? 'text-contrast' : 'text-ink-faint'}`} aria-label={`Go to step ${n}`}>
-        <span className={`w-[22px] h-[22px] rounded-full border-[1.5px] flex items-center justify-center text-[12px] font-bold font-mono transition-all ${flowStep >= n ? 'bg-contrast border-contrast text-base' : 'border-ink-faint'}`}>{n}</span>
-        <span className={flowStep === n ? 'underline underline-offset-4 decoration-2' : ''}>{label}</span>
+  // Single pill in the wizard strip. Visual states mirror the old wizard CSS:
+  //   active = current step (filled ink), done = visited earlier step (subtle red),
+  //   default = upcoming step (outlined).
+  const WizardPill = ({ n, label }) => {
+    const isActive = flowStep === n;
+    const isDone = flowStep > n;
+    const base = 'shrink-0 flex items-center gap-2 rounded-full border-[1.5px] px-3 py-1.5 text-[11px] font-bold font-mono uppercase tracking-wider transition-colors cursor-pointer';
+    const stateCls = isActive
+      ? 'bg-contrast border-contrast text-base'
+      : isDone
+        ? 'bg-primary-bg-subtle border-primary text-secondary'
+        : 'bg-base border-contrast text-contrast hover:bg-super-light-gray';
+    const numCls = isActive
+      ? 'bg-base text-contrast'
+      : isDone
+        ? 'bg-primary text-white'
+        : 'bg-primary text-white';
+    return (
+      <button type="button" onClick={() => goStep(n)} className={`${base} ${stateCls}`} aria-label={`Go to step ${n}`}>
+        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${numCls}`}>{n}</span>
+        <span>{label}</span>
       </button>
+    );
+  };
+
+  // Strip of all 16 wizard pills. Horizontally scrollable on narrow screens.
+  const WizardStrip = () => (
+    <div className="flex gap-2 overflow-x-auto pb-3 mb-6 border-b border-light-gray">
+      {SECTION_TITLES.map((t, i) => <WizardPill key={`s${i+1}`} n={i+1} label={t} />)}
+      <WizardPill n={BRAND_STEP} label="Brand" />
+      <WizardPill n={TEAM_STEP}  label="Team" />
+    </div>
   );
+
+  const isSectionStep = flowStep >= 1 && flowStep <= SECTION_COUNT;
 
   return (
       <div className="animate-screen-in">
@@ -566,30 +718,52 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
                   ? cos.map((c, i) => <span key={c.id} className="inline-block">{c.name}{i < cos.length - 1 ? ' ·' : ''}</span>)
                   : <span className="text-ink-faint italic">no client linked</span>}
             </div>
-            <div className="flex items-center mt-3 flex-wrap gap-y-2">
-              <StepBtn n={1} label="Content" />
-              <div className="w-8 h-[1.5px] bg-light-gray mx-2" />
-              <StepBtn n={2} label="Brand" />
-              <div className="w-8 h-[1.5px] bg-light-gray mx-2" />
-              <StepBtn n={3} label="Team" />
-            </div>
+            <p className="font-mono text-ink-soft text-[12px] mt-3">
+              {isSectionStep
+                ? `Section ${flowStep} of ${SECTION_COUNT} · ${SECTION_TITLES[flowStep - 1]}`
+                : flowStep === BRAND_STEP ? 'Step 15 · Brand'
+                : flowStep === TEAM_STEP  ? 'Step 16 · Team'
+                : ''}
+            </p>
           </div>
           <div className="flex gap-3 flex-wrap">
             <Button variant="ghost" size="sm" onClick={() => { persist(); nav('/preview/' + project.id); }}>Preview</Button>
-            {flowStep === 1 && <><Button variant="ghost" size="sm" onClick={saveDraft}>Save draft</Button><Button variant="primary" onClick={() => goStep(2)}>Next step →</Button></>}
-            {flowStep === 2 && <>
-              <Button variant="ghost" onClick={() => goStep(1)}>← Back</Button>
-              <Button variant="primary" onClick={() => goStep(3)}>Next step →</Button>
-            </>}
-            {flowStep === 3 && <>
-              <Button variant="ghost" onClick={() => goStep(2)}>← Back</Button>
-              <Button variant="primary" onClick={generate}>{isClient ? 'Save Story Guide' : 'Generate Story Guide ✓'}</Button>
-            </>}
+            <Button variant="ghost" size="sm" onClick={saveDraft}>Save draft</Button>
+            {flowStep > 1 && <Button variant="ghost" onClick={() => goStep(flowStep - 1)}>← Back</Button>}
+            {flowStep < lastStep && <Button variant="primary" onClick={() => goStep(flowStep + 1)}>Next step →</Button>}
+            {flowStep === lastStep && <Button variant="primary" onClick={generate}>{isClient ? 'Save Story Guide' : 'Generate Story Guide ✓'}</Button>}
           </div>
         </div>
 
-        {flowStep === 1 && <Card pad="p-0" className="overflow-hidden flex flex-col"><WYSIWYGEditor title="StoryGuide" content={content} onChange={setContent} /></Card>}
-        {flowStep === 2 && (
+        <WizardStrip />
+
+        {/* Steps 1–14: section form wizard. Each step renders the field schema for that section. */}
+        {isSectionStep && (
+            <div className="flex flex-col gap-6 max-w-[860px]">
+              <Card pad="p-5 sm:p-7">
+                <div className="font-mono text-[11px] uppercase tracking-widest text-ink-faint mb-1">
+                  Section {String(flowStep).padStart(2, '0')}
+                </div>
+                <h2 className="text-2xl font-bold mb-5">{SECTION_TITLES[flowStep - 1]}</h2>
+                <SectionForm
+                    step={flowStep}
+                    values={sectionData[flowStep] || {}}
+                    onField={(id, v) => setSectionField(flowStep, id, v)}
+                    logo={logo}
+                    onLogoFile={onLogoFile}
+                />
+              </Card>
+              <Card pad="p-5 sm:p-6" className="bg-paper-warm">
+                <h4 className="font-bold mb-2 text-[14px]">Tips</h4>
+                <ul className="m-0 pl-4 text-ink-soft text-sm leading-relaxed list-disc">
+                  <li>Use plain language — the client reads this.</li>
+                  <li>Short sentences. Active verbs.</li>
+                  <li>This section feeds the AI chat.</li>
+                </ul>
+              </Card>
+            </div>
+        )}
+        {flowStep === BRAND_STEP && (
             <div className="flex flex-col gap-6 max-w-[720px]">
               {/*<Card pad="p-5 sm:p-6" className="bg-paper-warm border-primary/30">*/}
               {/*  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">*/}
@@ -758,7 +932,7 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
             </div>
         )}
 
-        {flowStep === 3 && (
+        {flowStep === TEAM_STEP && (
             <div className="flex flex-col gap-6 max-w-[860px]">
               <Card pad="p-5 sm:p-7">
                 <div className="flex justify-between items-start gap-3 flex-wrap mb-3">
