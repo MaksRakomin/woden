@@ -43,13 +43,15 @@ function App() {
 
   const isSgRoute = route === '/client/storyguide' || route === '/employee/storyguide' || route.startsWith('/preview/');
   const isSgSearch = isSgRoute || route.includes('storyguide');
+  // Editor routes get a fixed-viewport layout so the editor can manage its own internal scroll.
+  const isEditorRoute = /^\/(admin|manager)\/projects\/[^/]+$/.test(route) || /^\/client\/projects\/[^/]+\/edit$/.test(route);
 
   return (
       <div className="flex min-h-screen bg-base text-contrast font-sans">
         {role && !isSgRoute && <SideNav role={role} route={route} nav={nav} onLogout={() => { setRole(null); nav('/login'); }} mobileOpen={mobileNavOpen} setMobileOpen={setMobileNavOpen} />}
-        <div className={`flex-1 flex flex-col min-w-0 ${isSgRoute ? 'h-screen overflow-hidden' : ''}`}>
+        <div className={`flex-1 flex flex-col min-w-0 ${isSgRoute || isEditorRoute ? 'h-screen overflow-hidden' : ''}`}>
           {role && <SubBar route={route} role={role} search={isSgSearch ? sgSearch : null} onSearch={isSgSearch ? setSgSearch : null} onMenuClick={!isSgRoute ? () => setMobileNavOpen(true) : null} onBack={route.startsWith('/preview/') ? () => window.history.back() : null} />}
-          <main className={`flex-1 w-full max-w-[1400px] mx-auto ${isSgRoute ? 'p-0 max-w-none overflow-hidden' : 'p-4 md:p-10'}`}>
+          <main className={`flex-1 w-full max-w-[1400px] mx-auto ${isSgRoute ? 'p-0 max-w-none overflow-hidden' : isEditorRoute ? 'p-4 md:p-10 overflow-hidden min-h-0' : 'p-4 md:p-10'}`}>
             {renderScreen()}
           </main>
         </div>

@@ -255,9 +255,9 @@ function RoleSwitcher({ role, setRole, nav, chatOpen }) {
   };
 
   return (
-      <div className={`fixed bottom-4 sm:bottom-6 z-[100] transition-all duration-300 ${chatOpen ? 'left-4 sm:left-6 right-auto' : 'right-4 sm:right-6 left-auto'}`}>
+      <div className="fixed top-4 sm:top-6 right-4 sm:right-6 z-[100]">
         {open && (
-            <div className={`absolute bottom-16 w-[min(340px,calc(100vw-32px))] bg-base border border-light-gray rounded-[24px] p-4 shadow-lg ${chatOpen ? 'left-0' : 'right-0'}`}>
+            <div className="absolute top-14 right-0 w-[min(340px,calc(100vw-32px))] bg-base border border-light-gray rounded-[24px] p-4 shadow-lg">
               <Label>Demo mode — swap roles</Label>
               <div className="flex flex-col gap-1 mt-2">
                 {roles.map(([r, label]) => {

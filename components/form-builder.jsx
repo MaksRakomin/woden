@@ -563,7 +563,6 @@ function SectionMetaModal({ section, onSave, onClose }) {
             onChange={e => setText(e.target.value)}
             placeholder="Used as context for AI assists in this section."
           />
-          <p className="text-ink-soft text-xs mt-1 m-0">Stored on the section. Exported in the JSON envelope.</p>
         </div>
         <div className="flex justify-end gap-2 mt-4">
           <window.Button variant="ghost" onClick={onClose}>Cancel</window.Button>

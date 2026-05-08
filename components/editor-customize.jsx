@@ -1,4 +1,4 @@
-const { useState: useStateE, useRef: useRefE, useEffect: useEffectE } = React;
+const { useState: useStateE, useRef: useRefE, useEffect: useEffectE, useLayoutEffect: useLayoutEffectE } = React;
 
 // NOTE: WYSIWYGEditor below is intentionally preserved but currently UNUSED.
 // The editor flow was restored to a 14-section wizard (steps 1–14) plus Brand
@@ -508,12 +508,56 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
     toast('Member removed');
   };
 
-  const goStep = (n) => { persist(); setFlowStep(n); };
+  // Per-section scroll memory: when the user comes back to a section, they land
+  // exactly where they left it. Body itself doesn't scroll — see scrollContainerRef.
+  const scrollContainerRef = useRefE(null);
+  const sectionScrollMap = useRefE({}); // { [stepNum]: scrollTop }
+  const prevStepRef = useRefE(1);
+  // Refs to the wizard pill strip and the currently active pill so we can
+  // horizontally center the active step in view when flowStep changes.
+  const wizardStripRef = useRefE(null);
+  const activePillRef = useRefE(null);
+  const goStep = (n) => {
+    if (scrollContainerRef.current) {
+      sectionScrollMap.current[prevStepRef.current] = scrollContainerRef.current.scrollTop;
+    }
+    persist();
+    setFlowStep(n);
+  };
+  useLayoutEffectE(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = sectionScrollMap.current[flowStep] || 0;
+    }
+    prevStepRef.current = flowStep;
+  }, [flowStep]);
+  // Center the active pill in its horizontal scroller AND in the viewport.
+  // Runs after layout — uses requestAnimationFrame to wait for browser paint
+  // so width measurements are stable.
+  useEffectE(() => {
+    const pill = activePillRef.current;
+    const strip = wizardStripRef.current;
+    if (!pill || !strip) return;
+    const id = requestAnimationFrame(() => {
+      // 1) Center inside the horizontal pill strip.
+      const target = pill.offsetLeft - (strip.clientWidth / 2) + (pill.offsetWidth / 2);
+      const max = strip.scrollWidth - strip.clientWidth;
+      strip.scrollTo({
+        left: Math.max(0, Math.min(target, max)),
+        behavior: 'smooth',
+      });
+      // 2) Center the strip itself in the viewport vertically (in case the
+      // page is scrolled and the strip is off-screen).
+      pill.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [flowStep]);
 
-  // Single pill in the wizard strip. Visual states mirror the old wizard CSS:
-  //   active = current step (filled ink), done = visited earlier step (subtle red),
-  //   default = upcoming step (outlined).
-  const WizardPill = ({ n, label }) => {
+  // NOTE: pills and strip are rendered as plain JSX-returning helpers — NOT as
+  // inline component definitions. Defining components inside a parent render
+  // creates a new component *type* on every render, which causes React to
+  // unmount + remount the entire subtree. That was resetting the strip's
+  // scrollLeft to 0 on every keystroke and made the active pill jump.
+  const renderPill = (n, label) => {
     const isActive = flowStep === n;
     const isDone = flowStep > n;
     const base = 'shrink-0 flex items-center gap-2 rounded-full border-[1.5px] px-3 py-1.5 text-[11px] font-bold font-mono uppercase tracking-wider transition-colors cursor-pointer';
@@ -524,20 +568,25 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
         : 'bg-base border-contrast text-contrast hover:bg-super-light-gray';
     const numCls = isActive
       ? 'bg-base text-contrast'
-      : isDone
-        ? 'bg-primary text-white'
-        : 'bg-primary text-white';
+      : 'bg-primary text-white';
     return (
-      <button type="button" onClick={() => goStep(n)} className={`${base} ${stateCls}`} aria-label={`Go to step ${n}`}>
+      <button
+        key={`pill-${n}`}
+        type="button"
+        ref={isActive ? activePillRef : null}
+        onClick={() => goStep(n)}
+        className={`${base} ${stateCls}`}
+        aria-label={`Go to step ${n}`}
+      >
         <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${numCls}`}>{n}</span>
         <span>{label}</span>
       </button>
     );
   };
 
-  // Small dashed `+` button between pills. Click → AddSectionModal.
-  const AddSectionSlot = ({ afterIndex }) => (
+  const renderAddSlot = (afterIndex) => (
     <button
+      key={`slot-${afterIndex}`}
       type="button"
       onClick={() => setAddSectionAfter(afterIndex)}
       className="shrink-0 w-6 h-6 rounded-full border border-dashed border-light-gray text-ink-faint text-[12px] leading-none hover:text-contrast hover:border-contrast transition-colors"
@@ -545,29 +594,28 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
     >+</button>
   );
 
-  // Strip of wizard pills with insertion slots between sections. Brand/Team always trail.
-  const WizardStrip = () => (
-    <div className="flex gap-2 overflow-x-auto pb-3 mb-6 border-b border-light-gray items-center">
-      <AddSectionSlot afterIndex={-1} />
+  const renderWizardStrip = () => (
+    <div ref={wizardStripRef} className="flex gap-2 overflow-x-auto pb-3 mb-6 border-b border-light-gray items-center scroll-smooth">
+      {renderAddSlot(-1)}
       {sections.map((s, i) => (
         <React.Fragment key={s.id}>
-          <WizardPill n={i + 1} label={s.title} />
-          <AddSectionSlot afterIndex={i} />
+          {renderPill(i + 1, s.title)}
+          {renderAddSlot(i)}
         </React.Fragment>
       ))}
-      <WizardPill n={BRAND_STEP} label="Brand" />
-      <WizardPill n={TEAM_STEP}  label="Team" />
+      {renderPill(BRAND_STEP, 'Brand')}
+      {renderPill(TEAM_STEP,  'Team')}
     </div>
   );
 
   const isSectionStep = flowStep >= 1 && flowStep <= SECTION_COUNT;
 
   return (
-      <div className="animate-screen-in">
-        <div className="flex mb-2">
+      <div className="animate-screen-in flex flex-col h-full">
+        <div className="shrink-0 flex mb-2">
           <a className="font-mono text-ink-soft text-[14px] cursor-pointer hover:underline" onClick={() => flowStep > 1 ? goStep(flowStep - 1) : nav(backRoute)}>← {flowStep > 1 ? 'BACK' : 'PROJECTS'}</a>
         </div>
-        <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-start mb-6">
+        <div className="shrink-0 flex flex-col gap-4 md:flex-row md:justify-between md:items-start mb-6">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1.5">
               {tpl && <Badge>{tpl.category}</Badge>}
@@ -590,13 +638,15 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
           <div className="flex gap-3 flex-wrap">
             <Button variant="ghost" size="sm" onClick={() => { persist(); nav('/preview/' + project.id); }}>Preview</Button>
             <Button variant="ghost" size="sm" onClick={saveDraft}>Save draft</Button>
-            {flowStep > 1 && <Button variant="ghost" onClick={() => goStep(flowStep - 1)}>← Back</Button>}
-            {flowStep < lastStep && <Button variant="primary" onClick={() => goStep(flowStep + 1)}>Next step →</Button>}
-            {flowStep === lastStep && <Button variant="primary" onClick={generate}>{isClient ? 'Save Story Guide' : 'Generate Story Guide ✓'}</Button>}
           </div>
         </div>
 
-        <WizardStrip />
+        <div className="shrink-0">
+          {renderWizardStrip()}
+        </div>
+
+        {/* Internal scroll container — body itself stays put; clicking a pill never moves window scroll. */}
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pb-20">
 
         {/* Steps 1–14: section form wizard. Each step renders the field schema for that section. */}
         {isSectionStep && (
@@ -869,6 +919,8 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
             </div>
         )}
 
+        </div>{/* /scroll container */}
+
         {addSectionAfter !== null && (
           <window.AddSectionModal
             template={tpl}
@@ -913,6 +965,23 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
             onClose={() => setExportPayload(null)}
           />
         )}
+
+        {/* Fixed bottom action bar — wizard navigation pinned for easy reach. */}
+        <div className="fixed bottom-0 left-0 right-0 bg-base/95 backdrop-blur-sm border-t border-light-gray z-40 px-4 sm:px-6 py-3 flex justify-between items-center gap-3">
+          <div className="font-mono text-[11px] uppercase tracking-widest text-ink-faint">
+            {flowStep} / {lastStep}
+            {' · '}
+            {flowStep <= SECTION_COUNT
+              ? sections[flowStep - 1].title
+              : flowStep === BRAND_STEP ? 'Brand'
+              : 'Team'}
+          </div>
+          <div className="flex gap-2">
+            {flowStep > 1 && <Button variant="ghost" onClick={() => goStep(flowStep - 1)}>← Back</Button>}
+            {flowStep < lastStep && <Button variant="primary" onClick={() => goStep(flowStep + 1)}>Next step →</Button>}
+            {flowStep === lastStep && <Button variant="primary" onClick={generate}>{isClient ? 'Save Story Guide' : 'Generate Story Guide ✓'}</Button>}
+          </div>
+        </div>
       </div>
   );
 }
