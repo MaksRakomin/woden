@@ -15,11 +15,78 @@ const CLIENT_COMPANIES = [
   { id: 'c6', name: 'Bridgeport Foods',     manager: 'Jonah Okafor' },
 ];
 
+// Shared default schema used as the seed for new projects across all 4 templates in v1.
+// Per-template differentiation is deferred — same set everywhere for now.
+const DEFAULT_SECTIONS = [
+  { templateKey: 'cover', title: 'Cover', fields: [
+    { templateFieldKey: 'clientName', type: 'text', label: 'Client name', config: { placeholder: 'Meridian Coffee Co.' } },
+    { templateFieldKey: 'tagline',    type: 'text', label: 'Tagline',     config: { placeholder: 'Coffee with conviction.' } },
+    { templateFieldKey: 'preparedBy', type: 'text', label: 'Prepared by', config: { placeholder: 'Woden' } },
+    { templateFieldKey: 'version',    type: 'text', label: 'Version',     config: { placeholder: '1.3' } },
+  ]},
+  { templateKey: 'narrative', title: 'Strategic Narrative', fields: [
+    { templateFieldKey: 'origin',     type: 'text', label: 'Origin',     config: { placeholder: 'In 2014, a barista named Ana…' } },
+    { templateFieldKey: 'conflict',   type: 'text', label: 'Conflict',   config: { placeholder: 'Three farmers. Seven middlemen…' } },
+    { templateFieldKey: 'resolution', type: 'text', label: 'Resolution', config: { placeholder: 'Meridian began as a single direct-trade relationship…' } },
+  ]},
+  { templateKey: 'mission-vision', title: 'Mission & Vision', fields: [
+    { templateFieldKey: 'mission', type: 'text', label: 'Mission', config: { placeholder: 'To connect growers and drinkers…' } },
+    { templateFieldKey: 'vision',  type: 'text', label: 'Vision',  config: { placeholder: 'A coffee industry where every cup traces…' } },
+  ]},
+  { templateKey: 'target-audience', title: 'Target Audience', fields: [
+    { templateFieldKey: 'p1Name',  type: 'text', label: 'Persona 1 name',  config: { placeholder: 'Conscious Casey' } },
+    { templateFieldKey: 'p1Quote', type: 'text', label: 'Persona 1 quote', config: { placeholder: 'I want to know where my money actually goes.' } },
+    { templateFieldKey: 'p2Name',  type: 'text', label: 'Persona 2 name',  config: { placeholder: 'Office Owen' } },
+    { templateFieldKey: 'p2Quote', type: 'text', label: 'Persona 2 quote', config: { placeholder: 'I buy coffee for 50 people…' } },
+  ]},
+  { templateKey: 'positioning', title: 'Positioning Statement', fields: [
+    { templateFieldKey: 'positioning', type: 'text', label: 'Positioning statement', config: { placeholder: 'For people who care where their coffee comes from…' } },
+  ]},
+  { templateKey: 'pillars', title: 'Brand Pillars', fields: [
+    { templateFieldKey: 'pillar1', type: 'text', label: 'Pillar 1', config: { placeholder: 'Transparent' } },
+    { templateFieldKey: 'pillar2', type: 'text', label: 'Pillar 2', config: { placeholder: 'Rigorous' } },
+    { templateFieldKey: 'pillar3', type: 'text', label: 'Pillar 3', config: { placeholder: 'Warm' } },
+    { templateFieldKey: 'pillar4', type: 'text', label: 'Pillar 4', config: { placeholder: 'Curious' } },
+  ]},
+  { templateKey: 'core-messaging', title: 'Core Messaging', fields: [
+    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
+    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
+  ]},
+  { templateKey: 'tone-of-voice', title: 'Tone of Voice', fields: [
+    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
+    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
+  ]},
+  { templateKey: 'brand-values', title: 'Brand Values', fields: [
+    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
+    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
+  ]},
+  { templateKey: 'brand-personality', title: 'Brand Personality', fields: [
+    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
+    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
+  ]},
+  { templateKey: 'visual-identity', title: 'Visual Identity', fields: [
+    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
+    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
+  ]},
+  { templateKey: 'photography', title: 'Photography & Imagery', fields: [
+    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
+    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
+  ]},
+  { templateKey: 'applications', title: 'Applications', fields: [
+    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
+    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
+  ]},
+  { templateKey: 'glossary', title: 'Glossary', fields: [
+    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
+    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
+  ]},
+];
+
 const TEMPLATES = [
-  { id: 't-it',            name: 'IT Company',            category: 'it',            description: 'Tech, SaaS, dev tooling. Emphasis on product narrative and technical credibility.' },
-  { id: 't-management',    name: 'Management Consulting', category: 'management',    description: 'Advisory and consulting firms. Emphasis on outcomes, frameworks, and trust.' },
-  { id: 't-manufacturing', name: 'Manufacturing',         category: 'manufacturing', description: 'Industrial, B2B, supply chain. Emphasis on operational expertise and reliability.' },
-  { id: 't-consumer',      name: 'Consumer Brand',        category: 'consumer',      description: 'Direct-to-consumer, lifestyle. Emphasis on values, identity, and emotional connection.' },
+  { id: 't-it',            name: 'IT Company',            category: 'it',            description: 'Tech, SaaS, dev tooling. Emphasis on product narrative and technical credibility.', defaultSections: DEFAULT_SECTIONS },
+  { id: 't-management',    name: 'Management Consulting', category: 'management',    description: 'Advisory and consulting firms. Emphasis on outcomes, frameworks, and trust.',         defaultSections: DEFAULT_SECTIONS },
+  { id: 't-manufacturing', name: 'Manufacturing',         category: 'manufacturing', description: 'Industrial, B2B, supply chain. Emphasis on operational expertise and reliability.',  defaultSections: DEFAULT_SECTIONS },
+  { id: 't-consumer',      name: 'Consumer Brand',        category: 'consumer',      description: 'Direct-to-consumer, lifestyle. Emphasis on values, identity, and emotional connection.', defaultSections: DEFAULT_SECTIONS },
 ];
 
 const PROJECTS = [
@@ -54,13 +121,6 @@ function getProjectTemplate(p) {
   if (!p || !p.templateId) return null;
   return TEMPLATES.find(t => t.id === p.templateId) || null;
 }
-
-const SECTION_TITLES = [
-  'Cover', 'Strategic Narrative', 'Mission & Vision', 'Target Audience',
-  'Positioning Statement', 'Brand Pillars', 'Core Messaging', 'Tone of Voice',
-  'Brand Values', 'Brand Personality', 'Visual Identity', 'Photography & Imagery',
-  'Applications', 'Glossary'
-];
 
 const MERIDIAN = {
   tagline: 'Coffee with conviction.',
@@ -425,9 +485,135 @@ function mockEFCChatReply(q) {
   return 'Based on EFC\'s StoryGuide, I can help you explore any section — from the StoryKernel narrative to specific messaging for each customer journey stage. What would you like to know more about?';
 }
 
+// Local copy of newId so data.js doesn't depend on form-builder.jsx load order.
+function newIdData(prefix) {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return prefix + '_' + crypto.randomUUID().slice(0, 8);
+  }
+  return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function slugifyKey(s) {
+  return String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'section';
+}
+
+// Idempotent: builds project.sections + project.sectionValues from the project's template.
+function ensureProjectSections(project, template) {
+  if (project.sections && Array.isArray(project.sections)) return;
+  const src = (template && template.defaultSections) || [];
+  project.sections = src.map(s => ({
+    id: newIdData('sec'),
+    templateKey: s.templateKey,
+    title: s.title,
+    origin: 'template',
+    metadata: '',
+    fields: (s.fields || []).map(f => ({
+      id: newIdData('fld'),
+      templateFieldKey: f.templateFieldKey,
+      type: f.type,
+      label: f.label,
+      required: !!f.required,
+      config: JSON.parse(JSON.stringify(f.config || {})),
+      origin: 'template',
+    })),
+  }));
+  project.sectionValues = {};
+}
+
+// Append a section's schema (no ids, no values) to template.defaultSections.
+// Used when "Save as default" is checked on a brand-new section. Upserts by templateKey.
+function applySectionDefaultToTemplate(template, section) {
+  if (!template) return;
+  if (!Array.isArray(template.defaultSections)) template.defaultSections = [];
+  const templateKey = section.templateKey || slugifyKey(section.title);
+  const def = {
+    templateKey,
+    title: section.title,
+    fields: (section.fields || []).map(f => ({
+      templateFieldKey: f.templateFieldKey || slugifyKey(f.label),
+      type: f.type,
+      label: f.label,
+      required: !!f.required,
+      config: JSON.parse(JSON.stringify(f.config || {})),
+    })),
+  };
+  const existingIdx = template.defaultSections.findIndex(s => s.templateKey === templateKey);
+  if (existingIdx >= 0) template.defaultSections[existingIdx] = def;
+  else template.defaultSections.push(def);
+}
+
+// Replace a section default by templateKey (used when editing a template-origin section).
+function replaceTemplateSectionDefault(template, section) {
+  applySectionDefaultToTemplate(template, section); // same upsert semantics
+}
+
+// Append/replace a single field on a section default by templateFieldKey.
+function applyFieldDefaultToTemplate(template, sectionTemplateKey, field) {
+  if (!template || !sectionTemplateKey) return;
+  if (!Array.isArray(template.defaultSections)) return;
+  const sec = template.defaultSections.find(s => s.templateKey === sectionTemplateKey);
+  if (!sec) return;
+  const fieldKey = field.templateFieldKey || slugifyKey(field.label);
+  const def = {
+    templateFieldKey: fieldKey,
+    type: field.type,
+    label: field.label,
+    required: !!field.required,
+    config: JSON.parse(JSON.stringify(field.config || {})),
+  };
+  if (!Array.isArray(sec.fields)) sec.fields = [];
+  const idx = sec.fields.findIndex(f => f.templateFieldKey === fieldKey);
+  if (idx >= 0) sec.fields[idx] = def;
+  else sec.fields.push(def);
+}
+
+// Builds the export envelope. Values are inlined into each field for backend-friendliness.
+function buildExport(project, template) {
+  return {
+    schemaVersion: 1,
+    exportedAt: new Date().toISOString(),
+    project: {
+      id: project.id,
+      name: project.name,
+      description: project.description || '',
+      status: project.status,
+      templateId: project.templateId || null,
+      templateName: (template && template.name) || null,
+    },
+    sections: (project.sections || []).map(s => ({
+      id: s.id,
+      templateKey: s.templateKey || null,
+      title: s.title,
+      origin: s.origin,
+      metadata: s.metadata || '',
+      fields: (s.fields || []).map(f => ({
+        id: f.id,
+        templateFieldKey: f.templateFieldKey || null,
+        type: f.type,
+        label: f.label,
+        required: !!f.required,
+        config: f.config,
+        origin: f.origin,
+        value: ((project.sectionValues || {})[s.id] || {})[f.id] ?? null,
+      })),
+    })),
+    brand: {
+      palette: project.palette || [],
+      fonts: project.fonts || null,
+      logo: project.logo || null,
+    },
+    team: project.team || [],
+  };
+}
+
 window.WODEN = {
-  MOCK_USERS, CLIENT_COMPANIES, PROJECTS, MANAGERS, TEMPLATES, SECTION_TITLES, MERIDIAN,
+  MOCK_USERS, CLIENT_COMPANIES, PROJECTS, MANAGERS, TEMPLATES, DEFAULT_SECTIONS, MERIDIAN,
   CHAT_SUGGESTIONS, mockChatReply,
   EFC, EFC_CHAT_SUGGESTIONS, mockEFCChatReply,
   getProjectClients, getProjectManagers, getProjectTemplate,
+  ensureProjectSections,
+  applySectionDefaultToTemplate,
+  replaceTemplateSectionDefault,
+  applyFieldDefaultToTemplate,
+  buildExport,
 };

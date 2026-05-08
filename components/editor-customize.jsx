@@ -401,151 +401,8 @@ function WYSIWYGEditor({ sectionN, title, content, onChange }) {
   );
 }
 
-// ── 14-section wizard field schema ───────────────────────────────────────
-// Field ids are stable (camelCase) so persisted data survives label edits.
-// Steps 1–6 have curated fields; 7–14 fall back to a generic content + notes
-// pair. Persisted under project.sectionData = { [stepNumber]: { [fieldId]: value } }.
-const SECTION_FIELDS = {
-  1: [
-    { id: 'clientName',  label: 'Client name',     kind: 'input',    placeholder: 'Meridian Coffee Co.' },
-    { id: 'tagline',     label: 'Tagline',         kind: 'input',    placeholder: 'Coffee with conviction.' },
-    { id: 'preparedBy',  label: 'Prepared by',     kind: 'input',    placeholder: 'Woden' },
-    { id: 'version',     label: 'Version',         kind: 'input',    placeholder: '1.3' },
-    { id: 'logoSlot',    label: 'Logo',            kind: 'logo' },
-  ],
-  2: [
-    { id: 'origin',      label: 'Origin',          kind: 'textarea', placeholder: 'In 2014, a barista named Ana…' },
-    { id: 'conflict',    label: 'Conflict',        kind: 'textarea', placeholder: 'Three farmers. Seven middlemen…' },
-    { id: 'resolution',  label: 'Resolution',      kind: 'textarea', placeholder: 'Meridian began as a single direct-trade relationship…' },
-  ],
-  3: [
-    { id: 'mission',     label: 'Mission',         kind: 'textarea', placeholder: 'To connect growers and drinkers…' },
-    { id: 'vision',      label: 'Vision',          kind: 'textarea', placeholder: 'A coffee industry where every cup traces…' },
-  ],
-  4: [
-    { id: 'p1Name',      label: 'Persona 1 name',  kind: 'input',    placeholder: 'Conscious Casey' },
-    { id: 'p1Quote',     label: 'Persona 1 quote', kind: 'input',    placeholder: 'I want to know where my money actually goes.' },
-    { id: 'p2Name',      label: 'Persona 2 name',  kind: 'input',    placeholder: 'Office Owen' },
-    { id: 'p2Quote',     label: 'Persona 2 quote', kind: 'input',    placeholder: 'I buy coffee for 50 people…' },
-  ],
-  5: [
-    { id: 'positioning', label: 'Positioning statement', kind: 'textarea', placeholder: 'For people who care where their coffee comes from, Meridian is the specialty roaster that names every farmer on every bag…' },
-  ],
-  6: [
-    { id: 'pillar1',     label: 'Pillar 1',        kind: 'input',    placeholder: 'Transparent' },
-    { id: 'pillar2',     label: 'Pillar 2',        kind: 'input',    placeholder: 'Rigorous' },
-    { id: 'pillar3',     label: 'Pillar 3',        kind: 'input',    placeholder: 'Warm' },
-    { id: 'pillar4',     label: 'Pillar 4',        kind: 'input',    placeholder: 'Curious' },
-  ],
-};
-const GENERIC_FIELDS = [
-  { id: 'content', label: 'Content', kind: 'textarea', placeholder: 'Fill this section…' },
-  { id: 'notes',   label: 'Notes',   kind: 'textarea', placeholder: '' },
-];
-function getSectionFields(step) { return SECTION_FIELDS[step] || GENERIC_FIELDS; }
-
-// Renders one section's form. `values` is the per-step object from sectionData;
-// `onField(fieldId, value)` propagates a single field change up to the parent.
-function SectionForm({ step, values, onField, logo, onLogoFile }) {
-  const fields = getSectionFields(step);
-  return (
-    <div className="flex flex-col gap-4">
-      {fields.map((f) => {
-        const v = values[f.id] || '';
-        if (f.kind === 'input') {
-          return (
-            <div key={f.id} className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-mono uppercase tracking-widest text-ink-faint">{f.label}</label>
-              <input
-                className="w-full px-3.5 py-2.5 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus"
-                placeholder={f.placeholder}
-                value={v}
-                onChange={(e) => onField(f.id, e.target.value)}
-              />
-            </div>
-          );
-        }
-        if (f.kind === 'textarea') {
-          return (
-            <div key={f.id} className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-mono uppercase tracking-widest text-ink-faint">{f.label}</label>
-              <textarea
-                className="w-full px-3.5 py-2.5 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus"
-                rows={4}
-                placeholder={f.placeholder}
-                value={v}
-                onChange={(e) => onField(f.id, e.target.value)}
-              />
-            </div>
-          );
-        }
-        if (f.kind === 'logo') {
-          return (
-            <div key={f.id} className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-mono uppercase tracking-widest text-ink-faint">{f.label}</label>
-              <div className="flex items-center gap-4 flex-wrap">
-                <div className="w-20 h-20 rounded-xl border border-light-gray bg-paper-warm flex items-center justify-center overflow-hidden shrink-0">
-                  {logo
-                    ? <img src={logo} alt="Logo preview" className="max-w-full max-h-full object-contain" />
-                    : <span className="text-ink-faint font-mono text-[12px] uppercase">No logo</span>}
-                </div>
-                <label className="px-3 py-2 rounded-lg border border-light-gray text-sm cursor-pointer hover:border-contrast transition-colors">
-                  <input type="file" accept="image/*" className="hidden" onChange={onLogoFile} />
-                  {logo ? 'Replace' : 'Upload logo'}
-                </label>
-              </div>
-            </div>
-          );
-        }
-        return null;
-      })}
-    </div>
-  );
-}
-
-const PALETTES = [
-  { id: 'espresso', name: 'Espresso',  colors: ['#3B2A1F', '#E8D5B7', '#D4572A', '#F7F1E5'] },
-  { id: 'slate',    name: 'Slate',     colors: ['#1C2B3A', '#C8D8E8', '#3A7CA5', '#F4F7FA'] },
-  { id: 'forest',   name: 'Forest',    colors: ['#1A3A2A', '#B8D8C8', '#2D7A4F', '#F2F7F4'] },
-  { id: 'dusk',     name: 'Dusk',      colors: ['#2D1B4E', '#D4C8F0', '#7C4DBC', '#F7F4FD'] },
-  { id: 'clay',     name: 'Clay',      colors: ['#3D2B1A', '#F0DDD0', '#C0622A', '#FDF6F2'] },
-  { id: 'minimal',  name: 'Minimal',   colors: ['#131215', '#EAEAEA', '#EA3323', '#FFFFFF'] },
-];
-
-function aiAutofillFromContent({ content, project, template }) {
-  const text = (content || '').toLowerCase();
-  const words = (content || '').trim().split(/\s+/).filter(Boolean);
-  const wordCount = words.length;
-
-  const firstSentence = (content || '').match(/[^.!?\n]+[.!?]/);
-  const description = firstSentence
-      ? firstSentence[0].trim().slice(0, 220)
-      : (wordCount > 0 ? words.slice(0, 24).join(' ') + (wordCount > 24 ? '…' : '') : `${project.name} — strategic narrative draft.`);
-
-  const cat = template?.category || '';
-  let paletteId = cat === 'it' ? 'slate'
-      : cat === 'manufacturing' ? 'clay'
-      : cat === 'management' ? 'minimal'
-      : cat === 'consumer' ? 'espresso'
-      : 'forest';
-  if (/forest|green|sustain|nature|organic/.test(text)) paletteId = 'forest';
-  if (/luxury|premium|craft|night|elegant/.test(text)) paletteId = 'dusk';
-  if (/coffee|food|warm|artisan|hand/.test(text)) paletteId = 'espresso';
-  if (/tech|saas|platform|software|api|cloud/.test(text)) paletteId = 'slate';
-  if (/industrial|factory|manufactur|machin/.test(text)) paletteId = 'clay';
-
-  const promptHints = [];
-  if (/saas|platform|software|api|cloud|developer/.test(text)) promptHints.push('Audience: technical buyers in software organisations. Avoid marketing fluff. Lean on plain-spoken precision.');
-  if (/enterprise|compliance|audit|governance|regulat/.test(text)) promptHints.push('Emphasise governance, audit trails, and predictability. Buyer is risk-aware.');
-  if (/coffee|food|consumer|lifestyle|community/.test(text)) promptHints.push('Audience: everyday consumers. Use warm, approachable language; lean on values and identity.');
-  if (/industrial|manufactur|operations|supply chain|fasten|connector/.test(text)) promptHints.push('Audience: operations leaders. Emphasise precision, reliability, and total operational perspective.');
-  if (/sustain|carbon|green|ethical/.test(text)) promptHints.push('Sustainability is a load-bearing theme — surface it without greenwashing.');
-  if (promptHints.length === 0) promptHints.push(`Tone: confident, plain-spoken. Audience inferred from a ${wordCount}-word brief.`);
-  if (template) promptHints.push(`Template context — ${template.name}: ${template.description}`);
-  const preprompt = promptHints.join('\n\n');
-
-  return { description, paletteId, preprompt };
-}
+// Section form schema and rendering live in components/form-builder.jsx
+// (window.SectionForm, window.FieldRenderer, etc.).
 
 function ProjectEditor({ nav, projectId, role = 'manager' }) {
   const project = window.WODEN.PROJECTS.find(p => p.id === projectId);
@@ -564,25 +421,17 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
 
   const isClient = role === 'client';
   const canManageTeam = role === 'client' || role === 'admin' || role === 'manager';
-  // 14 wizard sections + Brand (15) + Team (16)
-  const SECTION_TITLES = window.WODEN.SECTION_TITLES;
-  const SECTION_COUNT = SECTION_TITLES.length; // 14
-  const BRAND_STEP = SECTION_COUNT + 1;        // 15
-  const TEAM_STEP  = SECTION_COUNT + 2;        // 16
-  const lastStep = TEAM_STEP;
+  // Initialize project.sections / project.sectionValues from template defaults.
+  const tplForSeed = window.WODEN.getProjectTemplate(project);
+  window.WODEN.ensureProjectSections(project, tplForSeed);
 
   const [flowStep, setFlowStep] = useStateE(1);
-  const [content, setContent] = useStateE(project.content || '');
-  // Per-section form values: { [stepNumber]: { [fieldId]: value } }
-  const [sectionData, setSectionData] = useStateE(() => {
-    const seed = (project.sectionData && typeof project.sectionData === 'object') ? project.sectionData : {};
-    const out = {};
-    for (let s = 1; s <= SECTION_COUNT; s++) out[s] = { ...(seed[s] || {}) };
-    return out;
-  });
-  const setSectionField = (step, fieldId, value) => {
-    setSectionData((prev) => ({ ...prev, [step]: { ...(prev[step] || {}), [fieldId]: value } }));
-  };
+  const [sections, setSections] = useStateE(() => project.sections);
+  const [sectionValues, setSectionValues] = useStateE(() => project.sectionValues || {});
+  const SECTION_COUNT = sections.length;
+  const BRAND_STEP = SECTION_COUNT + 1;
+  const TEAM_STEP  = SECTION_COUNT + 2;
+  const lastStep = TEAM_STEP;
   const [brandFonts, setBrandFonts] = useStateE(() => ({
     heading: project.fonts?.heading || 'gt-pressura',
     body: project.fonts?.body || 'system',
@@ -606,15 +455,17 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
   const [logo, setLogo] = useStateE(project.logo || null);
   const [team, setTeam] = useStateE(Array.isArray(project.team) ? [...project.team] : []);
   const [inviteEmail, setInviteEmail] = useStateE('');
-  const [aiBusy, setAiBusy] = useStateE(false);
+  const [addSectionAfter, setAddSectionAfter] = useStateE(null); // index after which to insert; null = closed
+  const [metaFor, setMetaFor] = useStateE(null); // section id whose metadata is being edited
+  const [exportPayload, setExportPayload] = useStateE(null);
   const fileRef = useRefE(null);
 
   const cos = window.WODEN.getProjectClients(project);
   const tpl = window.WODEN.getProjectTemplate(project);
 
   const persist = () => {
-    project.content = content;
-    project.sectionData = sectionData;
+    project.sections = sections;
+    project.sectionValues = sectionValues;
     project.description = description;
     project.logo = logo;
     project.palette = brandColors;
@@ -624,7 +475,13 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
   };
 
   const saveDraft = () => { persist(); toast('Draft saved'); };
-  const generate = () => { persist(); project.status = 'review'; toast('Project generated ✓'); nav(backRoute); };
+  const generate = () => {
+    persist();
+    project.status = 'review';
+    const payload = window.WODEN.buildExport(project, tpl);
+    setExportPayload(payload);
+    toast('Story Guide generated ✓');
+  };
 
   const onLogoFile = (e) => {
     const file = e.target.files && e.target.files[0];
@@ -633,18 +490,6 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
     const reader = new FileReader();
     reader.onload = () => setLogo(reader.result);
     reader.readAsDataURL(file);
-  };
-
-  const runAiAutofill = () => {
-    if (aiBusy) return;
-    setAiBusy(true);
-    setTimeout(() => {
-      const out = aiAutofillFromContent({ content, project, template: tpl });
-      setDescription(out.description);
-      if (PALETTES.find(p => p.id === out.paletteId)) setPalette(out.paletteId);
-      setAiBusy(false);
-      toast('Auto-filled from project content ✨');
-    }, 600 + Math.random() * 500);
   };
 
   const addTeamMember = () => {
@@ -690,10 +535,26 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
     );
   };
 
-  // Strip of all 16 wizard pills. Horizontally scrollable on narrow screens.
+  // Small dashed `+` button between pills. Click → AddSectionModal.
+  const AddSectionSlot = ({ afterIndex }) => (
+    <button
+      type="button"
+      onClick={() => setAddSectionAfter(afterIndex)}
+      className="shrink-0 w-6 h-6 rounded-full border border-dashed border-light-gray text-ink-faint text-[12px] leading-none hover:text-contrast hover:border-contrast transition-colors"
+      aria-label={`Insert section after position ${afterIndex + 1}`}
+    >+</button>
+  );
+
+  // Strip of wizard pills with insertion slots between sections. Brand/Team always trail.
   const WizardStrip = () => (
-    <div className="flex gap-2 overflow-x-auto pb-3 mb-6 border-b border-light-gray">
-      {SECTION_TITLES.map((t, i) => <WizardPill key={`s${i+1}`} n={i+1} label={t} />)}
+    <div className="flex gap-2 overflow-x-auto pb-3 mb-6 border-b border-light-gray items-center">
+      <AddSectionSlot afterIndex={-1} />
+      {sections.map((s, i) => (
+        <React.Fragment key={s.id}>
+          <WizardPill n={i + 1} label={s.title} />
+          <AddSectionSlot afterIndex={i} />
+        </React.Fragment>
+      ))}
       <WizardPill n={BRAND_STEP} label="Brand" />
       <WizardPill n={TEAM_STEP}  label="Team" />
     </div>
@@ -720,9 +581,9 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
             </div>
             <p className="font-mono text-ink-soft text-[12px] mt-3">
               {isSectionStep
-                ? `Section ${flowStep} of ${SECTION_COUNT} · ${SECTION_TITLES[flowStep - 1]}`
-                : flowStep === BRAND_STEP ? 'Step 15 · Brand'
-                : flowStep === TEAM_STEP  ? 'Step 16 · Team'
+                ? `Section ${flowStep} of ${SECTION_COUNT} · ${sections[flowStep - 1].title}`
+                : flowStep === BRAND_STEP ? `Step ${BRAND_STEP} · Brand`
+                : flowStep === TEAM_STEP  ? `Step ${TEAM_STEP} · Team`
                 : ''}
             </p>
           </div>
@@ -741,17 +602,61 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
         {isSectionStep && (
             <div className="flex flex-col gap-6 max-w-[860px]">
               <Card pad="p-5 sm:p-7">
-                <div className="font-mono text-[11px] uppercase tracking-widest text-ink-faint mb-1">
-                  Section {String(flowStep).padStart(2, '0')}
+                <div className="flex items-start justify-between gap-3 flex-wrap mb-1">
+                  <div>
+                    <div className="font-mono text-[11px] uppercase tracking-widest text-ink-faint">Section {String(flowStep).padStart(2, '0')}</div>
+                    <h2 className="text-2xl font-bold mt-1">{sections[flowStep - 1].title}</h2>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMetaFor(sections[flowStep - 1].id)}
+                      className={`text-[11px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-full border ${sections[flowStep - 1].metadata ? 'border-primary text-secondary bg-primary-bg-subtle' : 'border-dashed border-light-gray text-ink-faint hover:text-contrast hover:border-contrast'} transition-colors`}
+                    >
+                      {sections[flowStep - 1].metadata
+                        ? `Metadata: "${sections[flowStep - 1].metadata.slice(0, 30)}${sections[flowStep - 1].metadata.length > 30 ? '…' : ''}" ✎`
+                        : '+ Add metadata'}
+                    </button>
+                    {sections[flowStep - 1].origin === 'custom' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const sec = sections[flowStep - 1];
+                          const filled = Object.keys((sectionValues[sec.id] || {})).length;
+                          if (!window.confirm(`Delete section "${sec.title}"? ${filled ? `${filled} filled fields will be lost.` : 'It has no filled fields yet.'}`)) return;
+                          setSections(prev => prev.filter((_, i) => i !== flowStep - 1));
+                          setSectionValues(prev => { const n = { ...prev }; delete n[sec.id]; return n; });
+                          setFlowStep(Math.max(1, flowStep - 1));
+                        }}
+                        className="text-[11px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-full border border-light-gray text-ink-faint hover:text-contrast hover:border-contrast transition-colors"
+                      >🗑 Delete section</button>
+                    )}
+                  </div>
                 </div>
-                <h2 className="text-2xl font-bold mb-5">{SECTION_TITLES[flowStep - 1]}</h2>
-                <SectionForm
-                    step={flowStep}
-                    values={sectionData[flowStep] || {}}
-                    onField={(id, v) => setSectionField(flowStep, id, v)}
-                    logo={logo}
-                    onLogoFile={onLogoFile}
-                />
+                <div className="mt-5">
+                  <window.SectionForm
+                    section={sections[flowStep - 1]}
+                    values={sectionValues[sections[flowStep - 1].id] || {}}
+                    template={tpl}
+                    onValueChange={(fieldId, v, opts) => {
+                      const sid = sections[flowStep - 1].id;
+                      setSectionValues(prev => {
+                        const next = { ...prev, [sid]: { ...(prev[sid] || {}) } };
+                        if (opts && opts.drop) delete next[sid][fieldId];
+                        else next[sid][fieldId] = v;
+                        return next;
+                      });
+                    }}
+                    onSectionChange={(updated) => {
+                      setSections(prev => prev.map((s, i) => i === flowStep - 1 ? updated : s));
+                    }}
+                    onSaveFieldDefault={(field) => {
+                      if (!tpl) return;
+                      window.WODEN.applyFieldDefaultToTemplate(tpl, sections[flowStep - 1].templateKey, field);
+                      window.toast && window.toast('Saved as default — affects new projects');
+                    }}
+                  />
+                </div>
               </Card>
               <Card pad="p-5 sm:p-6" className="bg-paper-warm">
                 <h4 className="font-bold mb-2 text-[14px]">Tips</h4>
@@ -765,21 +670,6 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
         )}
         {flowStep === BRAND_STEP && (
             <div className="flex flex-col gap-6 max-w-[720px]">
-              {/*<Card pad="p-5 sm:p-6" className="bg-paper-warm border-primary/30">*/}
-              {/*  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">*/}
-              {/*    <div className="flex-1 min-w-0">*/}
-              {/*      <h3 className="text-base font-bold mb-0.5 flex items-center gap-2"><span aria-hidden>✨</span>Auto-fill with AI</h3>*/}
-              {/*      <p className="text-ink-soft text-[12.5px] leading-snug m-0">Generate description, palette, and pre-prompt from your Step 1 content. You can edit the result.</p>*/}
-              {/*    </div>*/}
-              {/*    <Button variant="primary" size="sm" onClick={runAiAutofill} className={aiBusy ? 'opacity-70 pointer-events-none' : ''}>*/}
-              {/*      {aiBusy*/}
-              {/*          ? <><span className="inline-flex gap-1 items-center"><span className="w-1.5 h-1.5 rounded-full bg-current animate-[bounce-dots_1s_infinite]"/><span className="w-1.5 h-1.5 rounded-full bg-current animate-[bounce-dots_1s_infinite_0.15s]"/><span className="w-1.5 h-1.5 rounded-full bg-current animate-[bounce-dots_1s_infinite_0.3s]"/></span>Thinking</>*/}
-              {/*          : <>Auto-fill ✨</>}*/}
-              {/*    </Button>*/}
-              {/*  </div>*/}
-              {/*  {!content.trim() && <p className="font-mono text-[12px] text-ink-faint mt-2.5">Step 1 is empty — fill in some content first for richer suggestions.</p>}*/}
-              {/*</Card>*/}
-
               <Card pad="p-5 sm:p-7">
                 <h3 className="text-lg font-bold mb-1">Project description</h3>
                 <p className="text-ink-soft text-sm mb-3.5">A short note on what this StoryGuide is for.</p>
@@ -977,6 +867,51 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
                 <p className="text-ink-soft text-sm m-0">Employees see this project on their Home page with a single Preview button. They can read the StoryGuide but cannot edit content, brand, or team.</p>
               </Card>
             </div>
+        )}
+
+        {addSectionAfter !== null && (
+          <window.AddSectionModal
+            template={tpl}
+            onClose={() => setAddSectionAfter(null)}
+            onCreate={(newSection, opts) => {
+              const insertAt = addSectionAfter + 1;
+              setSections(prev => {
+                const next = prev.slice();
+                next.splice(insertAt, 0, newSection);
+                return next;
+              });
+              setSectionValues(prev => ({ ...prev, [newSection.id]: {} }));
+              setFlowStep(insertAt + 1);
+              if (opts.saveAsDefault && tpl) {
+                window.WODEN.applySectionDefaultToTemplate(tpl, newSection);
+                window.toast && window.toast('Saved as default — affects new projects');
+              }
+              setAddSectionAfter(null);
+            }}
+          />
+        )}
+
+        {metaFor && (() => {
+          const sec = sections.find(s => s.id === metaFor);
+          if (!sec) return null;
+          return (
+            <window.SectionMetaModal
+              section={sec}
+              onClose={() => setMetaFor(null)}
+              onSave={(text) => {
+                setSections(prev => prev.map(s => s.id === metaFor ? { ...s, metadata: text } : s));
+                setMetaFor(null);
+              }}
+            />
+          );
+        })()}
+
+        {exportPayload && (
+          <window.ExportModal
+            payload={exportPayload}
+            project={project}
+            onClose={() => setExportPayload(null)}
+          />
         )}
       </div>
   );
