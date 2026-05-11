@@ -339,13 +339,15 @@ function FieldConfigModal({ mode, initialField, sectionTemplateKey, template, on
   return (
     <div className="fixed inset-0 bg-black/45 z-[200] grid place-items-center p-3" onClick={onClose}>
       <div
-        className={`bg-base border border-light-gray rounded-[24px] ${wide ? 'w-[640px]' : 'w-[480px]'} max-w-[calc(100vw-24px)] p-5 sm:p-8 shadow-lg`}
+        className={`bg-base border border-light-gray rounded-[24px] ${wide ? 'w-[640px]' : 'w-[480px]'} max-w-[calc(100vw-24px)] max-h-[calc(100vh-24px)] flex flex-col p-5 sm:p-8 shadow-lg`}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center mb-5">
+        <div className="shrink-0 flex justify-between items-center mb-5">
           <h3 className="text-xl font-bold">{isEdit ? 'Edit field' : 'Add field'}</h3>
           <window.Button variant="ghost" size="sm" onClick={onClose}>✕</window.Button>
         </div>
+
+        <div className="flex-1 min-h-0 overflow-y-auto -mx-5 sm:-mx-8 px-5 sm:px-8">
 
         {!isEdit && (
           <>
@@ -486,7 +488,9 @@ function FieldConfigModal({ mode, initialField, sectionTemplateKey, template, on
           )}
         </div>
 
-        <div className="flex justify-end gap-2 mt-6">
+        </div>{/* /scroll area */}
+
+        <div className="shrink-0 flex justify-end gap-2 mt-6">
           <window.Button variant="ghost" onClick={onClose}>Cancel</window.Button>
           <window.Button variant="primary" onClick={submit}>{isEdit ? 'Save changes' : 'Add field'}</window.Button>
         </div>
