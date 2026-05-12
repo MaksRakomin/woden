@@ -612,9 +612,15 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
 
   return (
       <div className="animate-screen-in flex flex-col h-full">
+        {/* Top action row: BACK on the left; all pills (Preview, Save draft, template,
+            status) live on the right and share the same Button size="sm" height so
+            they line up flush. Badges get text-xs + py-1.5 + border-2 to match. */}
         <div className="shrink-0 flex items-center justify-between gap-3 mb-2">
           <a className="font-mono text-ink-soft text-[14px] cursor-pointer hover:underline" onClick={() => flowStep > 1 ? goStep(flowStep - 1) : nav(backRoute)}>← {flowStep > 1 ? 'BACK' : 'PROJECTS'}</a>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant={project.status === 'published' ? 'accent' : project.status === 'review' ? 'soft' : 'default'} className="text-xs py-1.5 border-2">{project.status}</Badge>
+            {tpl && <Badge className="text-xs py-1.5 border-2">{tpl.category}</Badge>}
+            <span> · </span>
             <Button variant="ghost" size="sm" onClick={() => { persist(); nav('/preview/' + project.id); }}>Preview</Button>
             <Button variant="ghost" size="sm" onClick={saveDraft}>Save draft</Button>
           </div>
@@ -625,10 +631,6 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
               {cos.length > 0
                   ? cos.map((c, i) => <span key={c.id} className="inline-block">{c.name}{i < cos.length - 1 ? ' ·' : ''}</span>)
                   : <span className="text-ink-faint italic">no client linked</span>}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap mb-1.5 ml-auto">
-              {tpl && <Badge>{tpl.category}</Badge>}
-              <Badge variant={project.status === 'published' ? 'accent' : project.status === 'review' ? 'soft' : 'default'}>{project.status}</Badge>
             </div>
         </div>
 
@@ -647,6 +649,10 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
                   <div>
                     <div className="font-mono text-[11px] uppercase tracking-widest text-ink-faint">Section {String(flowStep).padStart(2, '0')}</div>
                     <h2 className="text-2xl font-bold mt-1">{sections[flowStep - 1].title}</h2>
+                    {/* Note from the source record-type table — short descriptor shown to users. */}
+                    {sections[flowStep - 1].note && (
+                      <p className="text-ink-soft text-sm mt-1 m-0 italic">{sections[flowStep - 1].note}</p>
+                    )}
                     {(() => {
                       const sec = sections[flowStep - 1];
                       const tag = (window.WODEN.STAGE_TAGS || []).find(t => t.id === sec.stageTag);

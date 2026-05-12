@@ -45,49 +45,51 @@ function collectionListFields(itemLabel = 'Items') {
 }
 
 // Default section set seeded onto every new project. The 25 record types align
-// with the StoryEngine retrieval table: stageTag controls auto-load behavior
-// and kind distinguishes single records from collections of repeating items.
+// with the StoryEngine retrieval table: stageTag controls auto-load behavior,
+// kind distinguishes single records from collections of repeating items, and
+// note is the short descriptor from the source table shown to users below the
+// section title.
 const DEFAULT_SECTIONS = [
   // ── Always-loaded core records ─────────────────────────────────────────
-  { templateKey: 'story-kernel',      title: 'StoryKernel',      kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
-  { templateKey: 'mission',           title: 'Mission',          kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
-  { templateKey: 'values',            title: 'Values',           kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
-  { templateKey: 'positioning',       title: 'Positioning',      kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
-  { templateKey: 'brand-promise',     title: 'Brand Promise',    kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
-  { templateKey: 'differentiators',   title: 'Differentiators',  kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
-  { templateKey: 'vision',            title: 'Vision',           kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
-  { templateKey: 'verbal-identity',   title: 'Verbal Identity',  kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
-  { templateKey: 'narrative-guide',   title: 'Narrative Guide',  kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
+  { templateKey: 'story-kernel',      title: 'StoryKernel',      kind: 'singleton',  stageTag: 'all',                 note: 'Core narrative',                  fields: singletonContentFields() },
+  { templateKey: 'mission',           title: 'Mission',          kind: 'singleton',  stageTag: 'all',                 note: 'Messaging Hierarchy element',     fields: singletonContentFields() },
+  { templateKey: 'values',            title: 'Values',           kind: 'singleton',  stageTag: 'all',                 note: 'Messaging Hierarchy element',     fields: singletonContentFields() },
+  { templateKey: 'positioning',       title: 'Positioning',      kind: 'singleton',  stageTag: 'all',                 note: 'Messaging Hierarchy element',     fields: singletonContentFields() },
+  { templateKey: 'brand-promise',     title: 'Brand Promise',    kind: 'singleton',  stageTag: 'all',                 note: 'Messaging Hierarchy element',     fields: singletonContentFields() },
+  { templateKey: 'differentiators',   title: 'Differentiators',  kind: 'singleton',  stageTag: 'all',                 note: 'Messaging Hierarchy element',     fields: singletonContentFields() },
+  { templateKey: 'vision',            title: 'Vision',           kind: 'singleton',  stageTag: 'all',                 note: 'Messaging Hierarchy element',     fields: singletonContentFields() },
+  { templateKey: 'verbal-identity',   title: 'Verbal Identity',  kind: 'singleton',  stageTag: 'all',                 note: 'Messaging Hierarchy element',     fields: singletonContentFields() },
+  { templateKey: 'narrative-guide',   title: 'Narrative Guide',  kind: 'singleton',  stageTag: 'all',                 note: 'Client voice & tone rules',       fields: singletonContentFields() },
 
   // ── Awareness stage ────────────────────────────────────────────────────
-  { templateKey: 'icp',                 title: 'ICP',                 kind: 'singleton',  stageTag: 'awareness',     fields: singletonContentFields() },
-  { templateKey: 'awareness-messaging', title: 'Awareness Messaging', kind: 'singleton',  stageTag: 'awareness',     fields: singletonContentFields() },
+  { templateKey: 'icp',                 title: 'ICP',                 kind: 'singleton',  stageTag: 'awareness',     note: 'Ideal Customer Profile',          fields: singletonContentFields() },
+  { templateKey: 'awareness-messaging', title: 'Awareness Messaging', kind: 'singleton',  stageTag: 'awareness',     note: 'Stage-specific content',          fields: singletonContentFields() },
 
   // ── Consideration stage ────────────────────────────────────────────────
-  { templateKey: 'personas',                title: 'Personas',                kind: 'collection', stageTag: 'consideration', fields: collectionListFields('Personas') },
-  { templateKey: 'consideration-messaging', title: 'Consideration Messaging', kind: 'singleton',  stageTag: 'consideration', fields: singletonContentFields() },
+  { templateKey: 'personas',                title: 'Personas',                kind: 'collection', stageTag: 'consideration', note: 'All relevant personas for [CLIENT]', fields: collectionListFields('Personas') },
+  { templateKey: 'consideration-messaging', title: 'Consideration Messaging', kind: 'singleton',  stageTag: 'consideration', note: 'Stage-specific content',             fields: singletonContentFields() },
 
   // ── Evaluation stage ───────────────────────────────────────────────────
-  { templateKey: 'origin-story',          title: 'Origin Story',          kind: 'singleton',  stageTag: 'evaluation', fields: singletonContentFields() },
-  { templateKey: 'credibility-stories',   title: 'Credibility Stories',   kind: 'collection', stageTag: 'evaluation', fields: collectionListFields('Stories') },
-  { templateKey: 'evaluation-messaging',  title: 'Evaluation Messaging',  kind: 'singleton',  stageTag: 'evaluation', fields: singletonContentFields() },
+  { templateKey: 'origin-story',          title: 'Origin Story',          kind: 'singleton',  stageTag: 'evaluation', note: 'Full + short-form versions',         fields: singletonContentFields() },
+  { templateKey: 'credibility-stories',   title: 'Credibility Stories',   kind: 'collection', stageTag: 'evaluation', note: 'Multiple scenario-based stories',    fields: collectionListFields('Stories') },
+  { templateKey: 'evaluation-messaging',  title: 'Evaluation Messaging',  kind: 'singleton',  stageTag: 'evaluation', note: 'Stage-specific content',             fields: singletonContentFields() },
 
   // ── Customer Experience stage ──────────────────────────────────────────
-  { templateKey: 'product-messaging',              title: 'Product Messaging',              kind: 'collection', stageTag: 'customer_experience', fields: collectionListFields('Products') },
-  { templateKey: 'customer-experience-messaging',  title: 'Customer Experience Messaging',  kind: 'singleton',  stageTag: 'customer_experience', fields: singletonContentFields() },
+  { templateKey: 'product-messaging',              title: 'Product Messaging',              kind: 'collection', stageTag: 'customer_experience', note: 'Product or service-specific content', fields: collectionListFields('Products') },
+  { templateKey: 'customer-experience-messaging',  title: 'Customer Experience Messaging',  kind: 'singleton',  stageTag: 'customer_experience', note: 'Stage-specific content',              fields: singletonContentFields() },
 
   // ── Evangelism stage ───────────────────────────────────────────────────
-  { templateKey: 'customer-stories',     title: 'Customer Stories',     kind: 'collection', stageTag: 'evangelism', fields: collectionListFields('Stories') },
-  { templateKey: 'evangelism-messaging', title: 'Evangelism Messaging', kind: 'singleton',  stageTag: 'evangelism', fields: singletonContentFields() },
+  { templateKey: 'customer-stories',     title: 'Customer Stories',     kind: 'collection', stageTag: 'evangelism', note: 'Multiple stories of [CLIENT] customers', fields: collectionListFields('Stories') },
+  { templateKey: 'evangelism-messaging', title: 'Evangelism Messaging', kind: 'singleton',  stageTag: 'evangelism', note: 'Stage-specific content',                 fields: singletonContentFields() },
 
   // ── Narrative strategy ─────────────────────────────────────────────────
-  { templateKey: 'narrative-strategy', title: 'Narrative Strategy', kind: 'singleton', stageTag: 'narrative_strategy', fields: singletonContentFields() },
+  { templateKey: 'narrative-strategy', title: 'Narrative Strategy', kind: 'singleton', stageTag: 'narrative_strategy', note: 'Quarterly strategic goals developed in StoryAccelerator', fields: singletonContentFields() },
 
   // ── Reference (on-demand) ──────────────────────────────────────────────
-  { templateKey: 'key-insights',         title: 'Key Insights',         kind: 'singleton',  stageTag: 'reference', fields: singletonContentFields() },
-  { templateKey: 'client-quotes',        title: 'Client Quotes',        kind: 'collection', stageTag: 'reference', fields: collectionListFields('Quotes') },
-  { templateKey: 'competitive-analysis', title: 'Competitive Analysis', kind: 'collection', stageTag: 'reference', fields: collectionListFields('Competitors') },
-  { templateKey: 'documents-library',    title: 'Documents Library',    kind: 'collection', stageTag: 'reference', fields: collectionListFields('Documents') },
+  { templateKey: 'key-insights',         title: 'Key Insights',         kind: 'singleton',  stageTag: 'reference', note: 'Background research',                                                                fields: singletonContentFields() },
+  { templateKey: 'client-quotes',        title: 'Client Quotes',        kind: 'collection', stageTag: 'reference', note: 'Verbatim client quotes compiled during Discovery',                                   fields: collectionListFields('Quotes') },
+  { templateKey: 'competitive-analysis', title: 'Competitive Analysis', kind: 'collection', stageTag: 'reference', note: 'Competitor analysis conducted during Discovery',                                     fields: collectionListFields('Competitors') },
+  { templateKey: 'documents-library',    title: 'Documents Library',    kind: 'collection', stageTag: 'reference', note: 'User-uploaded materials for StoryEngine to reference. Users must tag with relevant metadata.', fields: collectionListFields('Documents') },
 ];
 
 const TEMPLATES = [
@@ -517,6 +519,7 @@ function ensureProjectSections(project, template) {
     metadata: '',
     kind: s.kind || 'singleton',
     stageTag: s.stageTag || 'reference',
+    note: s.note || '',
     fields: (s.fields || []).map(f => ({
       id: newIdData('fld'),
       templateFieldKey: f.templateFieldKey,
@@ -541,6 +544,7 @@ function applySectionDefaultToTemplate(template, section) {
     title: section.title,
     kind: section.kind || 'singleton',
     stageTag: section.stageTag || 'reference',
+    note: section.note || '',
     fields: (section.fields || []).map(f => ({
       templateFieldKey: f.templateFieldKey || slugifyKey(f.label),
       type: f.type,
@@ -600,6 +604,7 @@ function buildExport(project, template) {
       metadata: s.metadata || '',
       kind: s.kind || 'singleton',
       stageTag: s.stageTag || 'reference',
+      note: s.note || '',
       fields: (s.fields || []).map(f => ({
         id: f.id,
         templateFieldKey: f.templateFieldKey || null,
