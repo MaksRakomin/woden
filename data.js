@@ -15,71 +15,79 @@ const CLIENT_COMPANIES = [
   { id: 'c6', name: 'Bridgeport Foods',     manager: 'Jonah Okafor' },
 ];
 
-// Shared default schema used as the seed for new projects across all 4 templates in v1.
-// Per-template differentiation is deferred — same set everywhere for now.
+// Stage tags drive which records the StoryEngine auto-loads for a given user
+// section selection. `all` records load on every call; `reference` records are
+// fetched on demand only.
+const STAGE_TAGS = [
+  { id: 'all',                 label: 'All',                 hint: 'Loaded on every call (always-load records).' },
+  { id: 'awareness',           label: 'Awareness',           hint: 'Loaded when the user specifies the Awareness section.' },
+  { id: 'consideration',       label: 'Consideration',       hint: 'Loaded when the user specifies the Consideration section.' },
+  { id: 'evaluation',          label: 'Evaluation',          hint: 'Loaded when the user specifies the Evaluation section.' },
+  { id: 'customer_experience', label: 'Customer Experience', hint: 'Loaded when the user specifies the Customer Experience section.' },
+  { id: 'evangelism',          label: 'Evangelism',          hint: 'Loaded when the user specifies the Evangelism section.' },
+  { id: 'narrative_strategy',  label: 'Narrative Strategy',  hint: 'Loaded when a client has a current Narrative Strategy.' },
+  { id: 'reference',           label: 'Reference',           hint: 'Available on demand but not auto-loaded.' },
+];
+
+// Helpers for building DEFAULT_SECTIONS entries below.
+function singletonContentFields() {
+  return [
+    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
+    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
+  ];
+}
+function collectionListFields(itemLabel = 'Items') {
+  return [
+    { templateFieldKey: 'intro', type: 'text', label: 'Intro',     config: { placeholder: 'Optional context for the collection…' } },
+    { templateFieldKey: 'items', type: 'list', label: itemLabel,   config: { style: 'bullet' } },
+    { templateFieldKey: 'notes', type: 'text', label: 'Notes',     config: { placeholder: '' } },
+  ];
+}
+
+// Default section set seeded onto every new project. The 25 record types align
+// with the StoryEngine retrieval table: stageTag controls auto-load behavior
+// and kind distinguishes single records from collections of repeating items.
 const DEFAULT_SECTIONS = [
-  { templateKey: 'cover', title: 'Cover', fields: [
-    { templateFieldKey: 'clientName', type: 'text', label: 'Client name', config: { placeholder: 'Meridian Coffee Co.' } },
-    { templateFieldKey: 'tagline',    type: 'text', label: 'Tagline',     config: { placeholder: 'Coffee with conviction.' } },
-    { templateFieldKey: 'preparedBy', type: 'text', label: 'Prepared by', config: { placeholder: 'Woden' } },
-    { templateFieldKey: 'version',    type: 'text', label: 'Version',     config: { placeholder: '1.3' } },
-  ]},
-  { templateKey: 'narrative', title: 'Strategic Narrative', fields: [
-    { templateFieldKey: 'origin',     type: 'text', label: 'Origin',     config: { placeholder: 'In 2014, a barista named Ana…' } },
-    { templateFieldKey: 'conflict',   type: 'text', label: 'Conflict',   config: { placeholder: 'Three farmers. Seven middlemen…' } },
-    { templateFieldKey: 'resolution', type: 'text', label: 'Resolution', config: { placeholder: 'Meridian began as a single direct-trade relationship…' } },
-  ]},
-  { templateKey: 'mission-vision', title: 'Mission & Vision', fields: [
-    { templateFieldKey: 'mission', type: 'text', label: 'Mission', config: { placeholder: 'To connect growers and drinkers…' } },
-    { templateFieldKey: 'vision',  type: 'text', label: 'Vision',  config: { placeholder: 'A coffee industry where every cup traces…' } },
-  ]},
-  { templateKey: 'target-audience', title: 'Target Audience', fields: [
-    { templateFieldKey: 'p1Name',  type: 'text', label: 'Persona 1 name',  config: { placeholder: 'Conscious Casey' } },
-    { templateFieldKey: 'p1Quote', type: 'text', label: 'Persona 1 quote', config: { placeholder: 'I want to know where my money actually goes.' } },
-    { templateFieldKey: 'p2Name',  type: 'text', label: 'Persona 2 name',  config: { placeholder: 'Office Owen' } },
-    { templateFieldKey: 'p2Quote', type: 'text', label: 'Persona 2 quote', config: { placeholder: 'I buy coffee for 50 people…' } },
-  ]},
-  { templateKey: 'positioning', title: 'Positioning Statement', fields: [
-    { templateFieldKey: 'positioning', type: 'text', label: 'Positioning statement', config: { placeholder: 'For people who care where their coffee comes from…' } },
-  ]},
-  { templateKey: 'pillars', title: 'Brand Pillars', fields: [
-    { templateFieldKey: 'pillar1', type: 'text', label: 'Pillar 1', config: { placeholder: 'Transparent' } },
-    { templateFieldKey: 'pillar2', type: 'text', label: 'Pillar 2', config: { placeholder: 'Rigorous' } },
-    { templateFieldKey: 'pillar3', type: 'text', label: 'Pillar 3', config: { placeholder: 'Warm' } },
-    { templateFieldKey: 'pillar4', type: 'text', label: 'Pillar 4', config: { placeholder: 'Curious' } },
-  ]},
-  { templateKey: 'core-messaging', title: 'Core Messaging', fields: [
-    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
-    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
-  ]},
-  { templateKey: 'tone-of-voice', title: 'Tone of Voice', fields: [
-    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
-    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
-  ]},
-  { templateKey: 'brand-values', title: 'Brand Values', fields: [
-    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
-    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
-  ]},
-  { templateKey: 'brand-personality', title: 'Brand Personality', fields: [
-    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
-    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
-  ]},
-  { templateKey: 'visual-identity', title: 'Visual Identity', fields: [
-    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
-    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
-  ]},
-  { templateKey: 'photography', title: 'Photography & Imagery', fields: [
-    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
-    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
-  ]},
-  { templateKey: 'applications', title: 'Applications', fields: [
-    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
-    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
-  ]},
-  { templateKey: 'glossary', title: 'Glossary', fields: [
-    { templateFieldKey: 'content', type: 'text', label: 'Content', config: { placeholder: 'Fill this section…' } },
-    { templateFieldKey: 'notes',   type: 'text', label: 'Notes',   config: { placeholder: '' } },
-  ]},
+  // ── Always-loaded core records ─────────────────────────────────────────
+  { templateKey: 'story-kernel',      title: 'StoryKernel',      kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
+  { templateKey: 'mission',           title: 'Mission',          kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
+  { templateKey: 'values',            title: 'Values',           kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
+  { templateKey: 'positioning',       title: 'Positioning',      kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
+  { templateKey: 'brand-promise',     title: 'Brand Promise',    kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
+  { templateKey: 'differentiators',   title: 'Differentiators',  kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
+  { templateKey: 'vision',            title: 'Vision',           kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
+  { templateKey: 'verbal-identity',   title: 'Verbal Identity',  kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
+  { templateKey: 'narrative-guide',   title: 'Narrative Guide',  kind: 'singleton',  stageTag: 'all',                 fields: singletonContentFields() },
+
+  // ── Awareness stage ────────────────────────────────────────────────────
+  { templateKey: 'icp',                 title: 'ICP',                 kind: 'singleton',  stageTag: 'awareness',     fields: singletonContentFields() },
+  { templateKey: 'awareness-messaging', title: 'Awareness Messaging', kind: 'singleton',  stageTag: 'awareness',     fields: singletonContentFields() },
+
+  // ── Consideration stage ────────────────────────────────────────────────
+  { templateKey: 'personas',                title: 'Personas',                kind: 'collection', stageTag: 'consideration', fields: collectionListFields('Personas') },
+  { templateKey: 'consideration-messaging', title: 'Consideration Messaging', kind: 'singleton',  stageTag: 'consideration', fields: singletonContentFields() },
+
+  // ── Evaluation stage ───────────────────────────────────────────────────
+  { templateKey: 'origin-story',          title: 'Origin Story',          kind: 'singleton',  stageTag: 'evaluation', fields: singletonContentFields() },
+  { templateKey: 'credibility-stories',   title: 'Credibility Stories',   kind: 'collection', stageTag: 'evaluation', fields: collectionListFields('Stories') },
+  { templateKey: 'evaluation-messaging',  title: 'Evaluation Messaging',  kind: 'singleton',  stageTag: 'evaluation', fields: singletonContentFields() },
+
+  // ── Customer Experience stage ──────────────────────────────────────────
+  { templateKey: 'product-messaging',              title: 'Product Messaging',              kind: 'collection', stageTag: 'customer_experience', fields: collectionListFields('Products') },
+  { templateKey: 'customer-experience-messaging',  title: 'Customer Experience Messaging',  kind: 'singleton',  stageTag: 'customer_experience', fields: singletonContentFields() },
+
+  // ── Evangelism stage ───────────────────────────────────────────────────
+  { templateKey: 'customer-stories',     title: 'Customer Stories',     kind: 'collection', stageTag: 'evangelism', fields: collectionListFields('Stories') },
+  { templateKey: 'evangelism-messaging', title: 'Evangelism Messaging', kind: 'singleton',  stageTag: 'evangelism', fields: singletonContentFields() },
+
+  // ── Narrative strategy ─────────────────────────────────────────────────
+  { templateKey: 'narrative-strategy', title: 'Narrative Strategy', kind: 'singleton', stageTag: 'narrative_strategy', fields: singletonContentFields() },
+
+  // ── Reference (on-demand) ──────────────────────────────────────────────
+  { templateKey: 'key-insights',         title: 'Key Insights',         kind: 'singleton',  stageTag: 'reference', fields: singletonContentFields() },
+  { templateKey: 'client-quotes',        title: 'Client Quotes',        kind: 'collection', stageTag: 'reference', fields: collectionListFields('Quotes') },
+  { templateKey: 'competitive-analysis', title: 'Competitive Analysis', kind: 'collection', stageTag: 'reference', fields: collectionListFields('Competitors') },
+  { templateKey: 'documents-library',    title: 'Documents Library',    kind: 'collection', stageTag: 'reference', fields: collectionListFields('Documents') },
 ];
 
 const TEMPLATES = [
@@ -507,6 +515,8 @@ function ensureProjectSections(project, template) {
     title: s.title,
     origin: 'template',
     metadata: '',
+    kind: s.kind || 'singleton',
+    stageTag: s.stageTag || 'reference',
     fields: (s.fields || []).map(f => ({
       id: newIdData('fld'),
       templateFieldKey: f.templateFieldKey,
@@ -529,6 +539,8 @@ function applySectionDefaultToTemplate(template, section) {
   const def = {
     templateKey,
     title: section.title,
+    kind: section.kind || 'singleton',
+    stageTag: section.stageTag || 'reference',
     fields: (section.fields || []).map(f => ({
       templateFieldKey: f.templateFieldKey || slugifyKey(f.label),
       type: f.type,
@@ -586,6 +598,8 @@ function buildExport(project, template) {
       title: s.title,
       origin: s.origin,
       metadata: s.metadata || '',
+      kind: s.kind || 'singleton',
+      stageTag: s.stageTag || 'reference',
       fields: (s.fields || []).map(f => ({
         id: f.id,
         templateFieldKey: f.templateFieldKey || null,
@@ -607,7 +621,7 @@ function buildExport(project, template) {
 }
 
 window.WODEN = {
-  MOCK_USERS, CLIENT_COMPANIES, PROJECTS, MANAGERS, TEMPLATES, DEFAULT_SECTIONS, MERIDIAN,
+  MOCK_USERS, CLIENT_COMPANIES, PROJECTS, MANAGERS, TEMPLATES, DEFAULT_SECTIONS, STAGE_TAGS, MERIDIAN,
   CHAT_SUGGESTIONS, mockChatReply,
   EFC, EFC_CHAT_SUGGESTIONS, mockEFCChatReply,
   getProjectClients, getProjectManagers, getProjectTemplate,

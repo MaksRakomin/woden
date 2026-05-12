@@ -502,7 +502,11 @@ function FieldConfigModal({ mode, initialField, sectionTemplateKey, template, on
 // ── AddSectionModal ──────────────────────────────────────────────────────
 function AddSectionModal({ template, onCreate, onClose }) {
   const [title, setTitle] = useStateFB('');
+  const [stageTag, setStageTag] = useStateFB('reference');
+  const [kind, setKind] = useStateFB('singleton');
   const [saveAsDefault, setSaveAsDefault] = useStateFB(false);
+  const stageTags = (window.WODEN && window.WODEN.STAGE_TAGS) || [];
+  const stageHint = stageTags.find(s => s.id === stageTag)?.hint || '';
   const submit = () => {
     const t = title.trim();
     if (!t) { window.toast && window.toast('Section name is required'); return; }
@@ -512,6 +516,8 @@ function AddSectionModal({ template, onCreate, onClose }) {
       title: t,
       origin: 'custom',
       metadata: '',
+      kind,
+      stageTag,
       fields: [],
     }, { saveAsDefault });
   };
@@ -533,6 +539,35 @@ function AddSectionModal({ template, onCreate, onClose }) {
             onKeyDown={e => e.key === 'Enter' && submit()}
           />
         </div>
+
+        <div className="flex flex-col gap-1.5 mb-4">
+          <label className="text-[12px] font-mono uppercase tracking-widest text-ink-faint">Stage tag</label>
+          <select
+            value={stageTag}
+            onChange={e => setStageTag(e.target.value)}
+            className="w-full px-3.5 py-2.5 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus"
+          >
+            {stageTags.map(s => (
+              <option key={s.id} value={s.id}>{s.label}</option>
+            ))}
+          </select>
+          {stageHint && <p className="text-ink-soft text-[12px] m-0">{stageHint}</p>}
+        </div>
+
+        <div className="flex flex-col gap-1.5 mb-4">
+          <label className="text-[12px] font-mono uppercase tracking-widest text-ink-faint">Kind</label>
+          <div className="flex gap-3">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="radio" name="kind" checked={kind === 'singleton'} onChange={() => setKind('singleton')} />
+              Singleton
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="radio" name="kind" checked={kind === 'collection'} onChange={() => setKind('collection')} />
+              Collection
+            </label>
+          </div>
+        </div>
+
         {template && (
           <label className="flex items-start gap-2 mb-2 cursor-pointer">
             <input type="checkbox" checked={saveAsDefault} onChange={e => setSaveAsDefault(e.target.checked)} className="mt-1" />
@@ -549,8 +584,13 @@ function AddSectionModal({ template, onCreate, onClose }) {
 }
 
 // ── SectionMetaModal ─────────────────────────────────────────────────────
+// Edits both the AI hint and the stage tag for a section. The stage tag drives
+// StoryEngine retrieval (which records are auto-loaded for a stage selection).
 function SectionMetaModal({ section, onSave, onClose }) {
   const [text, setText] = useStateFB(section.metadata || '');
+  const [stageTag, setStageTag] = useStateFB(section.stageTag || 'reference');
+  const stageTags = (window.WODEN && window.WODEN.STAGE_TAGS) || [];
+  const stageHint = stageTags.find(s => s.id === stageTag)?.hint || '';
   return (
     <div className="fixed inset-0 bg-black/45 z-[200] grid place-items-center p-3" onClick={onClose}>
       <div className="bg-base border border-light-gray rounded-[24px] w-[480px] max-w-[calc(100vw-24px)] p-5 sm:p-8 shadow-lg" onClick={e => e.stopPropagation()}>
@@ -558,6 +598,21 @@ function SectionMetaModal({ section, onSave, onClose }) {
           <h3 className="text-xl font-bold">Section metadata</h3>
           <window.Button variant="ghost" size="sm" onClick={onClose}>✕</window.Button>
         </div>
+
+        <div className="flex flex-col gap-1.5 mb-4">
+          <label className="text-[12px] font-mono uppercase tracking-widest text-ink-faint">Stage tag</label>
+          <select
+            value={stageTag}
+            onChange={e => setStageTag(e.target.value)}
+            className="w-full px-3.5 py-2.5 border border-gray rounded-lg bg-base text-contrast text-sm focus:outline-none focus:border-primary focus:shadow-focus"
+          >
+            {stageTags.map(s => (
+              <option key={s.id} value={s.id}>{s.label}</option>
+            ))}
+          </select>
+          {stageHint && <p className="text-ink-soft text-[12px] m-0">{stageHint}</p>}
+        </div>
+
         <div className="flex flex-col gap-1.5 mb-2">
           <label className="text-[12px] font-mono uppercase tracking-widest text-ink-faint">AI hint (optional)</label>
           <textarea
@@ -570,7 +625,7 @@ function SectionMetaModal({ section, onSave, onClose }) {
         </div>
         <div className="flex justify-end gap-2 mt-4">
           <window.Button variant="ghost" onClick={onClose}>Cancel</window.Button>
-          <window.Button variant="primary" onClick={() => onSave(text)}>Save</window.Button>
+          <window.Button variant="primary" onClick={() => onSave({ metadata: text, stageTag })}>Save</window.Button>
         </div>
       </div>
     </div>

@@ -612,33 +612,24 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
 
   return (
       <div className="animate-screen-in flex flex-col h-full">
-        <div className="shrink-0 flex mb-2">
+        <div className="shrink-0 flex items-center justify-between gap-3 mb-2">
           <a className="font-mono text-ink-soft text-[14px] cursor-pointer hover:underline" onClick={() => flowStep > 1 ? goStep(flowStep - 1) : nav(backRoute)}>← {flowStep > 1 ? 'BACK' : 'PROJECTS'}</a>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="ghost" size="sm" onClick={() => { persist(); nav('/preview/' + project.id); }}>Preview</Button>
+            <Button variant="ghost" size="sm" onClick={saveDraft}>Save draft</Button>
+          </div>
         </div>
-        <div className="shrink-0 flex flex-col gap-4 md:flex-row md:justify-between md:items-start mb-6">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1.5">
-              {tpl && <Badge>{tpl.category}</Badge>}
-              <Badge variant={project.status === 'published' ? 'accent' : project.status === 'review' ? 'soft' : 'default'}>{project.status}</Badge>
-            </div>
+        <div className="shrink-0 flex gap-4 mb-3">
             <h1 className="text-[clamp(2rem,1.5rem+2vw,3.25rem)] font-bold leading-tight tracking-tight">{project.name}</h1>
-            <div className="font-mono text-[14px] text-ink-soft mt-1.5 flex flex-wrap gap-1">
+            <div className="font-mono text-[16px] text-ink-soft ml4 my-3 flex flex-wrap gap-1 self-end">
               {cos.length > 0
                   ? cos.map((c, i) => <span key={c.id} className="inline-block">{c.name}{i < cos.length - 1 ? ' ·' : ''}</span>)
                   : <span className="text-ink-faint italic">no client linked</span>}
             </div>
-            <p className="font-mono text-ink-soft text-[12px] mt-3">
-              {isSectionStep
-                ? `Section ${flowStep} of ${SECTION_COUNT} · ${sections[flowStep - 1].title}`
-                : flowStep === BRAND_STEP ? `Step ${BRAND_STEP} · Brand`
-                : flowStep === TEAM_STEP  ? `Step ${TEAM_STEP} · Team`
-                : ''}
-            </p>
-          </div>
-          <div className="flex gap-3 flex-wrap">
-            <Button variant="ghost" size="sm" onClick={() => { persist(); nav('/preview/' + project.id); }}>Preview</Button>
-            <Button variant="ghost" size="sm" onClick={saveDraft}>Save draft</Button>
-          </div>
+            <div className="flex items-center gap-2 flex-wrap mb-1.5 ml-auto">
+              {tpl && <Badge>{tpl.category}</Badge>}
+              <Badge variant={project.status === 'published' ? 'accent' : project.status === 'review' ? 'soft' : 'default'}>{project.status}</Badge>
+            </div>
         </div>
 
         <div className="shrink-0">
@@ -656,6 +647,18 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
                   <div>
                     <div className="font-mono text-[11px] uppercase tracking-widest text-ink-faint">Section {String(flowStep).padStart(2, '0')}</div>
                     <h2 className="text-2xl font-bold mt-1">{sections[flowStep - 1].title}</h2>
+                    {(() => {
+                      const sec = sections[flowStep - 1];
+                      const tag = (window.WODEN.STAGE_TAGS || []).find(t => t.id === sec.stageTag);
+                      const kindLabel = sec.kind === 'collection' ? 'Collection' : sec.kind === 'singleton' ? 'Singleton' : null;
+                      if (!tag && !kindLabel) return null;
+                      return (
+                        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                          {tag && <Badge variant="soft">Stage · {tag.label}</Badge>}
+                          {kindLabel && <Badge>{kindLabel}</Badge>}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -950,8 +953,18 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
             <window.SectionMetaModal
               section={sec}
               onClose={() => setMetaFor(null)}
-              onSave={(text) => {
-                setSections(prev => prev.map(s => s.id === metaFor ? { ...s, metadata: text } : s));
+              onSave={(payload) => {
+                // Back-compat: old callsites passed a string (metadata only).
+                const next = typeof payload === 'string'
+                  ? { metadata: payload }
+                  : (payload || {});
+                setSections(prev => prev.map(s => s.id === metaFor
+                  ? {
+                      ...s,
+                      ...(next.metadata !== undefined ? { metadata: next.metadata } : {}),
+                      ...(next.stageTag  !== undefined ? { stageTag:  next.stageTag  } : {}),
+                    }
+                  : s));
                 setMetaFor(null);
               }}
             />
@@ -977,9 +990,9 @@ function ProjectEditor({ nav, projectId, role = 'manager' }) {
               : 'Team'}
           </div>
           <div className="flex gap-2">
-            {flowStep > 1 && <Button variant="ghost" onClick={() => goStep(flowStep - 1)}>← Back</Button>}
-            {flowStep < lastStep && <Button variant="primary" onClick={() => goStep(flowStep + 1)}>Next step →</Button>}
-            {flowStep === lastStep && <Button variant="primary" onClick={generate}>{isClient ? 'Save Story Guide' : 'Generate Story Guide ✓'}</Button>}
+            {flowStep > 1 && <Button variant="ghost" size="sm" onClick={() => goStep(flowStep - 1)}>← Back</Button>}
+            {flowStep < lastStep && <Button variant="primary" size="sm" onClick={() => goStep(flowStep + 1)}>Next step →</Button>}
+            {flowStep === lastStep && <Button variant="primary" size="sm" onClick={generate}>{isClient ? 'Save Story Guide' : 'Generate Story Guide ✓'}</Button>}
           </div>
         </div>
       </div>
